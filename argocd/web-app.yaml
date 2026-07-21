@@ -3,17 +3,37 @@ kind: Application
 metadata:
   name: lgtm
   namespace: argocd
+
 spec:
   project: default
   source:
-    repoURL: http://gitea.localhost/nicolas/taskmaster
+    repoURL: https://github.com/mrlouf/ft_lgtm.git
     targetRevision: main
+
+    path: helm/lgtm
+
+    helm:
+      valuesObject:
+        frontend:
+          image:
+            repository: ghcr.io/mrlouf/lgtm-frontend
+            tag: latest
+
+        backend:
+          image:
+            repository: ghcr.io/mrlouf/lgtm-backend
+            tag: latest
+
+
   destination:
     server: https://kubernetes.default.svc
     namespace: lgtm
+
   syncPolicy:
+
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - CreateNamespace=true

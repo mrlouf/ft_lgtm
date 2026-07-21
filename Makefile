@@ -39,14 +39,15 @@ cluster: ## Install the k3d cluster
 	@echo ''
 	@./scripts/setup-cluster.sh $(CLUSTER_NAME)
 
-build: ## Build the docker images
+build: ## Build the docker images and push them to the GHCR registry
 	@printf "\n$(BLUE)Building docker images$(NC)\n"
 	@echo ''
-	docker build -t lgtm_front:latest ./frontend
-	docker build -t lgtm_back:latest ./backend
 
-	docker push ghcr.io/mrlouf/lgtm_front
+	docker build -t ghcr.io/mrlouf/lgtm_back:latest ./backend
+	docker build -t ghcr.io/mrlouf/lgtm_front:latest ./frontend
+
 	docker push ghcr.io/mrlouf/lgtm_back
+	docker push ghcr.io/mrlouf/lgtm_front
 
 
 deploy: ## Deploy all services
