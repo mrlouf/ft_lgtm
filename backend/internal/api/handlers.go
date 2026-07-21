@@ -16,6 +16,12 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 func RunHandler(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("You've reached the run handler")
+	fmt.Println("Run Request incoming from ", r.RemoteAddr)
+
+	// var request RunRequest
+
+	body := r.Body
+
+	fmt.Println(body)
 
 }

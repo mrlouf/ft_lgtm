@@ -13,6 +13,10 @@ metadata:
     argocd-image-updater.argoproj.io/backend.helm.image-name: backend.image.repository
     argocd-image-updater.argoproj.io/backend.helm.image-tag: backend.image.tag
 
+    argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/frontend.helm.image-name: frontend.image.repository
+    argocd-image-updater.argoproj.io/frontend.helm.image-tag: frontend.image.tag
+
 spec:
   project: default
   source:
