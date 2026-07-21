@@ -13,8 +13,14 @@ TAG=$(git rev-parse --short HEAD)
 
 set -e
 
-docker build -t ghcr.io/mrlouf/lgtm_back:sha-$TAG ./backend; \
-docker build -t ghcr.io/mrlouf/lgtm_front:sha-$TAG ./frontend; \
+#docker build -t ghcr.io/mrlouf/lgtm_back:sha-$TAG ./backend; \
+#docker build -t ghcr.io/mrlouf/lgtm_front:sha-$TAG ./frontend; \
 
-docker push ghcr.io/mrlouf/lgtm_back:sha-$TAG; \
-docker push ghcr.io/mrlouf/lgtm_front:sha-$TAG
+#docker push ghcr.io/mrlouf/lgtm_back:sha-$TAG; \
+#docker push ghcr.io/mrlouf/lgtm_front:sha-$TAG
+
+docker build -t ghcr.io/mrlouf/lgtm_back:latest ./backend; \
+docker build -t ghcr.io/mrlouf/lgtm_front:latest ./frontend; \
+
+docker push ghcr.io/mrlouf/lgtm_back:latest; \
+docker push ghcr.io/mrlouf/lgtm_front:latest

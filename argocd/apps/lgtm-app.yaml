@@ -26,12 +26,12 @@ spec:
         frontend:
           image:
             repository: ghcr.io/mrlouf/lgtm_front
-            tag: sha-dc60f39
+            tag: latest
 
         backend:
           image:
             repository: ghcr.io/mrlouf/lgtm_back
-            tag: sha-dc60f39
+            tag: latest
 
   destination:
     server: https://kubernetes.default.svc
