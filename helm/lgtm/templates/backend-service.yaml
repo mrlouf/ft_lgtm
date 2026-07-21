@@ -3,6 +3,7 @@ kind: Service
 
 metadata:
   name: backend
+  namespace: lgtm
 
 spec:
   selector:

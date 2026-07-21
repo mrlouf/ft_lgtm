@@ -3,6 +3,7 @@ kind: Ingress
 
 metadata:
   name: lgtm-ingress
+  namespace: lgtm
 
 spec:
   ingressClassName: {{ .Values.ingress.className }}

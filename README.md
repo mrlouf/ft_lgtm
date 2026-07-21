@@ -8,6 +8,10 @@ Looks Good To Monitor. A modern k8s observability stack for a web application re
 
 This project is about deploying a web application on a Kubernetes cluster along with a stack monitoring and observability tools.
 
+This is an overview of the architecture as seen from k9s:
+
+<INSERT SCREENSHOT HERE>
+
 ### Web Application
 
 The web application consists in a simple front/backend architecture:

@@ -1,12 +1,19 @@
 #!/bin/bash
 
+# Colours
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Colour
+
 CLUSTER_NAME=$1
 
 set -e
 
 # Install Docker first if not present:
 if ! systemctl is-active --quiet docker; then
-    echo "Installing Docker..."
+    echo -e "${BLUE}Installing Docker...${NC}"
     # Add Docker's official GPG key:
     sudo apt-get update
     sudo apt-get install -y ca-certificates curl
@@ -25,7 +32,7 @@ if ! systemctl is-active --quiet docker; then
     sudo systemctl start docker
     sudo systemctl enable docker
 else
-    echo "Docker already installed and running"
+    echo -e "${GREEN}Docker already installed and running${NC}"
 fi
 
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
@@ -34,11 +41,11 @@ fi
 
 if ! command -v k3s &> /dev/null; then
     
-    echo "Installing k3s..."
+    echo -e "${BLUE}Installing k3s...${NC}"
     curl -sfL https://get.k3s.io | sh -
 
 else
-    echo "k3s already installed"
+    echo -e "${GREEN}k3s already installed${NC}"
 fi
 
 
@@ -49,20 +56,20 @@ fi
 # Install k3d
 
 if ! command -v k3d &> /dev/null; then
-    echo "Installing k3d..."
+    echo -e "${BLUE}Installing k3d...${NC}"
     wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 else
-    echo "k3d already installed"
+    echo -e "${GREEN}k3d already installed${NC}"
 fi
 
 # Install kubectl
 
 if command -v kubectl &> /dev/null; then
-    echo "kubectl is already installed"
+    echo -e "${GREEN}kubectl is already installed${NC}"
 
 else
 
-    echo "kubectl not found, installing..."
+    echo -e "${BLUE}kubectl not found, installing...${NC}"
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     rm kubectl
@@ -72,14 +79,30 @@ fi
 # Create the k3d cluster if it doesn't exist
 if ! k3d cluster list | grep -q "$CLUSTER_NAME"; then
 
-    echo "Creating k3d cluster $CLUSTER_NAME..."
+    echo -e "${BLUE}Creating k3d cluster $CLUSTER_NAME...${NC}"
     k3d cluster create $CLUSTER_NAME --config ./k3d/lgtm.yaml
 
 else
 
-    echo "k3d cluster $CLUSTER_NAME already exists"
+    echo -e "${GREEN}k3d cluster ${YELLOW}\"$CLUSTER_NAME\"${GREEN} already exists${NC}"
 
 fi
 
 # Set the kubeconfig context
 export KUBECONFIG=$(k3d kubeconfig write $CLUSTER_NAME)
+
+
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+#                   Install Helm                   #
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+
+if ! command -v helm &> /dev/null; then
+    echo -e "${BLUE}Installing Helm...${NC}"
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+    rm get_helm.sh
+
+else
+    echo -e "${GREEN}Helm already installed${NC}"
+fi

@@ -3,6 +3,7 @@ kind: Deployment
 
 metadata:
   name: frontend
+  namespace: lgtm
 
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
