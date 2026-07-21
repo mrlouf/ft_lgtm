@@ -2,6 +2,8 @@
 
 CLUSTER_NAME=$1
 
+set -e
+
 # Install Docker first if not present:
 if ! systemctl is-active --quiet docker; then
     echo "Installing Docker..."
@@ -27,28 +29,57 @@ else
 fi
 
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+#                   Install k3s                    #
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+
+if ! command -v k3s &> /dev/null; then
+    
+    echo "Installing k3s..."
+    curl -sfL https://get.k3s.io | sh -
+
+else
+    echo "k3s already installed"
+fi
+
+
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #                   Setup k3d                      #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 
 # Install k3d
-echo "Starting k3d..."
-wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+if ! command -v k3d &> /dev/null; then
+    echo "Installing k3d..."
+    wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+else
+    echo "k3d already installed"
+fi
 
 # Install kubectl
+
 if command -v kubectl &> /dev/null; then
     echo "kubectl is already installed"
+
 else
+
     echo "kubectl not found, installing..."
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-    rm kubect
+    rm kubectl
+
 fi
 
-# create a k3d cluster and map ports
-k3d cluster create $CLUSTER_NAME --agents 2 --wait \
-    --port 80:80@loadbalancer \
-    --port 8080:8080@loadbalancer \
-    --kubeconfig-update-default
+# Create the k3d cluster if it doesn't exist
+if ! k3d cluster list | grep -q "$CLUSTER_NAME"; then
 
-# set the kubeconfig context
+    echo "Creating k3d cluster $CLUSTER_NAME..."
+    k3d cluster create $CLUSTER_NAME --config ./k3d/lgtm.yaml
+
+else
+
+    echo "k3d cluster $CLUSTER_NAME already exists"
+
+fi
+
+# Set the kubeconfig context
 export KUBECONFIG=$(k3d kubeconfig write $CLUSTER_NAME)

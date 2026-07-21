@@ -72,4 +72,4 @@ clean: ## Delete cluster
 		echo "Aborting cluster deletion."; \
 	fi
 
-PHONY: build up down logs clean help
+PHONY: help all setup build start up stop clean

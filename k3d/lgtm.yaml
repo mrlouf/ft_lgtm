@@ -1,0 +1,30 @@
+apiVersion: k3d.io/v1alpha5
+
+kind: Simple
+
+metadata:
+  name: lgtm
+
+servers: 1
+agents: 2
+
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 8080:8080
+    nodeFilters:
+      - loadbalancer
+
+options:
+  k3d:
+    wait: true
+    timeout: "60s"
+  k3s:
+    extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
+      - arg: "--tls-san=my.host.domain"
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true # add new cluster to your default Kubeconfig; same as `--kubeconfig-update-default` (default: true)
+    switchCurrentContext: true # also set current-context to the new cluster's context; same as `--kubeconfig-switch-context` (default: true)
