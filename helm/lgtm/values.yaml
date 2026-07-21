@@ -13,7 +13,7 @@ frontend:
   image:
     repository: lgtm_front
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   replicaCount: 1
 
@@ -23,6 +23,6 @@ backend:
   image:
     repository: lgtm_back
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   replicaCount: 1
