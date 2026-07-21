@@ -16,14 +16,13 @@ spec:
       valuesObject:
         frontend:
           image:
-            repository: ghcr.io/mrlouf/lgtm-frontend
+            repository: ghcr.io/mrlouf/lgtm_front
             tag: latest
 
         backend:
           image:
-            repository: ghcr.io/mrlouf/lgtm-backend
+            repository: ghcr.io/mrlouf/lgtm_back
             tag: latest
-
 
   destination:
     server: https://kubernetes.default.svc
