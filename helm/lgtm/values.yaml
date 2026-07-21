@@ -12,7 +12,7 @@ frontend:
     port: 80
   image:
     repository: lgtm_front
-    tag: latest
+    tag: sha-dc60f39
     pullPolicy: IfNotPresent
 
   replicaCount: 1
@@ -22,7 +22,7 @@ backend:
       port: 4242
   image:
     repository: lgtm_back
-    tag: latest
+    tag: sha-dc60f39
     pullPolicy: IfNotPresent
 
   replicaCount: 1

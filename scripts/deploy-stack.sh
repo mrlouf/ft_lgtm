@@ -32,7 +32,6 @@ else
 
     # Add the optional ArgoCD Image Updater
     helm install argocd-image-updater argo/argocd-image-updater --namespace argocd
-    argocd-image-updater webhook --disable-tls
 
     kubectl wait --namespace argocd --for=condition=available deployment/argocd-server --timeout=120s
 
