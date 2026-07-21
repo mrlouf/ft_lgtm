@@ -47,21 +47,8 @@ fi
 # create a k3d cluster and map ports
 k3d cluster create $CLUSTER_NAME --agents 2 --wait \
     --port 80:80@loadbalancer \
-    --port 443:443@loadbalancer \
     --port 8080:8080@loadbalancer \
-    --port 2222:2222@loadbalancer
+    --kubeconfig-update-default
 
 # set the kubeconfig context
 export KUBECONFIG=$(k3d kubeconfig write $CLUSTER_NAME)
-
-#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
-#                   Install Helm                   #
-#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
-
-# Install Helm
-echo -e "\e[34mInstalling Helm...\e[0m"
-sudo apt-get install curl gpg apt-transport-https --yes
-curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo apt-get update
-sudo apt-get install helm
