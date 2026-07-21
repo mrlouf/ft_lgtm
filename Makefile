@@ -40,12 +40,14 @@ cluster: ## Install the k3d cluster
 	@./scripts/setup-cluster.sh $(CLUSTER_NAME)
 
 build: ## Build the docker images
-	@printf "\n$(GREEN)Building docker images$(NC)\n"
+	@printf "\n$(BLUE)Building docker images$(NC)\n"
 	@echo ''
 	docker build -t lgtm_front:latest ./frontend
 	docker build -t lgtm_back:latest ./backend
-	k3d image import lgtm_front:latest -c $(CLUSTER_NAME)
-	k3d image import lgtm_back:latest -c $(CLUSTER_NAME)
+
+	docker push ghcr.io/mrlouf/lgtm_front
+	docker push ghcr.io/mrlouf/lgtm_back
+
 
 deploy: ## Deploy all services
 	@printf "\n$(BLUE) Deploying the stack... this may take a moment $(NC)\n\n"

@@ -30,10 +30,19 @@ else
     --create-namespace \
     --values argocd/values.yaml 1>/dev/null
 
+    # Add the optional ArgoCD Image Updater
+    helm install argocd-image-updater argo/argocd-image-updater --namespace argocd
+    argocd-image-updater webhook --disable-tls
+
     kubectl wait --namespace argocd --for=condition=available deployment/argocd-server --timeout=120s
 
 fi
 
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode)
+
+echo -e "${YELLOW}Initial admin password: ${ARGOCD_PASSWORD}${NC}"
+
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #               Deploy the app via ArgoCD          #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+
