@@ -4,6 +4,15 @@ metadata:
   name: lgtm
   namespace: argocd
 
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: |
+      backend=ghcr.io/mrlouf/lgtm_back
+      frontend=ghcr.io/mrlouf/lgtm_front
+
+    argocd-image-updater.argoproj.io/backend.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/backend.helm.image-name: backend.image.repository
+    argocd-image-updater.argoproj.io/backend.helm.image-tag: backend.image.tag
+
 spec:
   project: default
   source:
