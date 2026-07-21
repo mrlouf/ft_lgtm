@@ -1,29 +1,26 @@
-export default function RunButton() {
+type RunButtonProps = {
+    code: string;
+};
+
+export default function RunButton({ code }: RunButtonProps) {
     function handleRun() {
-        console.log("Running code...");
-
-        try {
-
-            const res = fetch("http://localhost:4242/api/run", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    code: "console.log('Hello, World!');",
-                    language: "javascript",
-                }),
+        fetch("http://localhost:4242/api/run", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                code,
+                language: "javascript",
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Run result:", data);
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log("Run result:", data);
-                })
-                .catch((error) => {
-                    console.error("Error running code:", error);
-                });
-        } catch (error) {
-            console.error("Error running code:", error);
-        }
+            .catch((error) => {
+                console.error("Error running code:", error);
+            });
     }
 
     return (
