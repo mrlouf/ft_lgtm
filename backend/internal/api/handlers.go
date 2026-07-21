@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -20,8 +21,10 @@ func RunHandler(w http.ResponseWriter, r *http.Request) {
 
 	// var request RunRequest
 
-	body := r.Body
+	var request RunRequest
 
-	fmt.Println(body)
+	json.NewDecoder(r.Body).Decode(&request)
+
+	fmt.Println("Request: ", request)
 
 }

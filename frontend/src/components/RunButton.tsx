@@ -4,7 +4,7 @@ export default function RunButton() {
 
         try {
 
-            const res = fetch("/api/run", {
+            const res = fetch("http://localhost:4242/api/run", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

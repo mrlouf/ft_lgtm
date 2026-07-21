@@ -1,0 +1,12 @@
+FROM golang:1.26-alpine
+
+WORKDIR /app
+
+RUN go install github.com/air-verse/air@latest
+
+COPY go.mod ./
+RUN go mod download
+
+EXPOSE 4242
+
+CMD ["air"]

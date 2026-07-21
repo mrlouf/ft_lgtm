@@ -1,0 +1,38 @@
+services:
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    container_name: lgtm-backend
+    working_dir: /app
+    command: air
+    volumes:
+      - ../backend:/app
+    ports:
+      - "4242:4242"
+    networks:
+      - lgtm
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: lgtm-frontend
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://backend:4242
+    depends_on:
+      - backend
+    networks:
+      - lgtm
+
+networks:
+  lgtm:
+    driver: bridge

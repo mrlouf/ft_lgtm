@@ -73,5 +73,10 @@ clean: ## Delete cluster
 	else \
 		echo "Aborting cluster deletion."; \
 	fi
+	
+develop: ## Start the development environment
+	@printf "\n$(YELLOW)Starting the development environment...$(NC)\n"
+	@echo ''
+	@docker compose -f dev/docker-compose.yaml up --build
 
-PHONY: help all cluster build start deploy stop clean
+PHONY: help all cluster build start deploy stop clean develop
