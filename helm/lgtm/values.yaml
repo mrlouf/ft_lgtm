@@ -1,0 +1,28 @@
+ingress:
+  enabled: true
+  className: traefik
+  host: lgtm.local
+  http:
+    paths:
+    unsecure: true
+
+
+frontend:
+  service:
+    port: 80
+  image:
+    repository: lgtm_front
+    tag: latest
+    pullPolicy: Never
+
+  replicaCount: 1
+
+backend:
+  service:
+      port: 4242
+  image:
+    repository: lgtm_back
+    tag: latest
+    pullPolicy: Never
+
+  replicaCount: 1

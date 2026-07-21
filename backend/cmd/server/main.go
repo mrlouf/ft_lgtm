@@ -10,8 +10,8 @@ import (
 
 func main() {
 
-	http.HandleFunc("/health", api.HealthHandler)
-	http.HandleFunc("/run", api.RunHandler)
+	http.HandleFunc("/api/health", api.HealthHandler)
+	http.HandleFunc("/api/run", api.RunHandler)
 
 	fmt.Println("LGTM Backend server running at http://localhost:4242")
 

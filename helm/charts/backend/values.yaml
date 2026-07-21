@@ -1,9 +1,0 @@
-image:
-  repository: lgtm-backend
-  tag: dev
-  pullPolicy: Never
-
-replicaCount: 1
-
-service:
-  port: 4242
