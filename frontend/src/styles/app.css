@@ -325,6 +325,48 @@ body::after {
     box-shadow: 0 0 12px rgba(108, 165, 255, 0.45);
 }
 
+.language-button {
+    min-width: 124px;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        transform 140ms ease,
+        border-color 140ms ease,
+        background 140ms ease,
+        color 140ms ease;
+}
+
+.language-button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(108, 165, 255, 0.42);
+    background: rgba(108, 165, 255, 0.14);
+}
+
+.language-button:active {
+    transform: translateY(1px);
+}
+
+.language-select {
+    appearance: none;
+    cursor: pointer;
+    min-width: 138px;
+    padding-right: 28px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+        linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    background-position:
+        calc(100% - 16px) 50%,
+        calc(100% - 10px) 50%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: rgba(108, 165, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(108, 165, 255, 0.12);
+}
+
 @media (max-width: 960px) {
     .app-grid {
         grid-template-columns: 1fr;

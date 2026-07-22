@@ -3,13 +3,25 @@ import { useEffect, useRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 
+import LanguageButton from "./LanguageButton";
+
+type Language = "javascript" | "python" | "go";
+
 type EditorProps = {
     code: string;
+    language: Language;
     onChange: (value: string) => void;
+    onChangeLanguage: (language: Language) => void;
     resetVersion: number;
 };
 
-export default function Editor({ code, onChange, resetVersion }: EditorProps) {
+export default function Editor({
+    code,
+    language,
+    onChange,
+    onChangeLanguage,
+    resetVersion,
+}: EditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
 
@@ -57,13 +69,16 @@ export default function Editor({ code, onChange, resetVersion }: EditorProps) {
                 insert: code,
             },
         });
-    }, [resetVersion]);
+    }, [resetVersion, code]);
 
     return (
         <section className="panel editor-panel">
             <div className="panel-head">
                 <h2 className="panel-title">Console</h2>
-                <span className="panel-badge">Javascript</span>
+                <LanguageButton
+                    language={language}
+                    onChangeLanguage={onChangeLanguage}
+                />
             </div>
             <div className="panel-body">
                 <div ref={editorRef} />

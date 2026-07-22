@@ -8,13 +8,21 @@ import StatusBar from "./components/StatusBar";
 
 import getSnippet from "./snippets/Snippets";
 
-export default function App() {
+type Language = "javascript" | "python" | "go";
 
+export default function App() {
+    const [language, setLanguage] = useState<Language>("javascript");
     const [code, setCode] = useState(getSnippet("javascript"));
     const [resetVersion, setResetVersion] = useState(0);
 
+    function handleLanguageChange(nextLanguage: Language) {
+        setLanguage(nextLanguage);
+        setCode(getSnippet(nextLanguage));
+        setResetVersion((value) => value + 1);
+    }
+
     function handleReset() {
-        setCode(getSnippet("javascript"));
+        setCode(getSnippet(language));
         setResetVersion((value) => value + 1);
     }
 
@@ -27,11 +35,17 @@ export default function App() {
                         <p className="app-subtitle">do not trust the terminal</p>
                     </div>
                     <ResetButton onReset={handleReset} />
-                    <RunButton code={code} />
+                    <RunButton code={code} language={language} />
                 </header>
 
                 <div className="app-grid">
-                    <Editor resetVersion={resetVersion} code={code} onChange={setCode} />
+                    <Editor
+                        code={code}
+                        language={language}
+                        onChange={setCode}
+                        onChangeLanguage={handleLanguageChange}
+                        resetVersion={resetVersion}
+                    />
                     <Output />
                 </div>
 
