@@ -1,4 +1,8 @@
-export default function Output() {
+type OutputProps = {
+    output: string;
+};
+
+export default function Output({ output }: OutputProps) {
     return (
         <section className="panel output-panel">
             <div className="panel-head">
@@ -6,7 +10,7 @@ export default function Output() {
                 <span className="panel-badge">live feed</span>
             </div>
             <div className="panel-body">
-                <pre>Waiting for execution...</pre>
+                <pre>{output}</pre>
             </div>
         </section>
     );

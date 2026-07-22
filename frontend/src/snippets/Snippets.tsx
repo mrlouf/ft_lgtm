@@ -2,15 +2,15 @@ const goSnippet = `package main
 
 import "fmt"
 
-func hello(who string) {
-    fmt.Printf("Hello, %s!\\n", who)
+func main() {
+    fmt.Printf("Hello, world!\n")
 }`;
 
-const pythonSnippet = `def hello(who="world"):
-    print(f"Hello, {who}!")`;
+const pythonSnippet = `def hello():
+    print("Hello, world!")`;
 
-const javascriptSnippet = `function hello(who = "world") {
-    console.log(\`Hello, \${who}!\`)
+const javascriptSnippet = `function hello() {
+    console.log("Hello, world!")
 }`;
 
 export default function getSnippet(name: string): string {

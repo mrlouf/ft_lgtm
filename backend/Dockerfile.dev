@@ -3,8 +3,9 @@ FROM golang:1.26-alpine
 WORKDIR /app
 
 RUN go install github.com/air-verse/air@latest
+# RUN go get github.com/tetratelabs/wazero@latest
 
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 EXPOSE 4242

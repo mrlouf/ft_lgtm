@@ -18,7 +18,27 @@ The web application consists in a simple front/backend architecture:
 
 - **client**: A very basic IDE that runs in a browser and allows the user to write code snippets and run them. The IDE is powered by [CodeMirror](https://codemirror.net/docs/), a popular code editor library for the web. The rest is built with React and TypeScript. The client is served via a Nginx server.
 
-- **server**: receives the code from the client and execute it in a WASM sandbox environment to prevent potential faulty programs (infinite loops, memory leaks) or malicious code (unauthorised file access, destructive programs). The server is built in Go for performance and architecture simplicity. 
+- **server**: receives the code from the client and execute it in a WASM sandbox environment to prevent potential faulty programs (infinite loops, memory leaks) or malicious code (unauthorised file access, destructive programs). The server is built in Go for performance and architecture simplicity.
+
+### Web Assembly (WASM)
+
+Upon receiving the code snippet from the client, the server compiles it into a Web Assembly module and executes it in a sandbox environment. The result of the execution is then sent back to the client.
+
+The following diagram illustrates the architecture of the WASM environment:
+
+```terminal
+Kubernetes Pod
+
+└── Linux Container
+
+      └── Go Backend
+      
+             └── Wasmtime Runtime
+
+                    └── User WASM Module
+```
+
+The WASM runtime lives directly inside the Go backend. The runtime is responsible for executing the user WASM module in a sandbox environment with the necessary security and resource constraints.
 
 ### IPFS (Inter-Planetary File System)
 
@@ -35,6 +55,8 @@ The monitoring and observability stack consists in the following applications ru
 ### References
 
 - [Kubernetes Documentation](https://kubernetes.io/docs/home)
+- [CodeMirror Documentation](https://codemirror.net/docs/)
+- [Wasmtime Documentation](https://docs.wasmtime.dev/)
 
 ### AI Usage
 
