@@ -32,3 +32,6 @@ go.work.sum
 .vscode/
 
 node_modules/
+
+backend/tmp/
+backend/main
