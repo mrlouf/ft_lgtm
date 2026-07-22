@@ -22,6 +22,8 @@ IPFS_URL	= http://ipfs.local
 GRAFANA_URL	= http://grafana.local
 ARGOCD_URL	= http://argocd.local
 
+APP_URL_DEV = http://localhost:5173
+
 
 # ════════════════════════════════════════════════════════════
 
@@ -77,6 +79,14 @@ clean: ## Delete cluster
 develop: ## Start the development environment
 	@printf "\n$(YELLOW)Starting the development environment...$(NC)\n"
 	@echo ''
-	@docker compose -f dev/docker-compose.yaml up --build
+	@docker compose -f dev/docker-compose.yaml up --build -d
+	@echo ''
+	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
+	@echo ''
 
-PHONY: help all cluster build start deploy stop clean develop
+develop-stop: ## Stop the development environment
+	@printf "\n$(RED)Stopping the development environment...$(NC)\n"
+	@echo ''
+	@docker compose -f dev/docker-compose.yaml down
+
+PHONY: help all cluster build start deploy stop clean develop develop-stop

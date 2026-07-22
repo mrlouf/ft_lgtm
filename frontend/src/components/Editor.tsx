@@ -63,7 +63,7 @@ export default function Editor({ code, onChange, resetVersion }: EditorProps) {
         <section className="panel editor-panel">
             <div className="panel-head">
                 <h2 className="panel-title">Console</h2>
-                <span className="panel-badge">phosphor link</span>
+                <span className="panel-badge">Javascript</span>
             </div>
             <div className="panel-body">
                 <div ref={editorRef} />

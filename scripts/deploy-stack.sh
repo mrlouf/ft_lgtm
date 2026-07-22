@@ -45,3 +45,8 @@ echo -e "${YELLOW}Initial admin password: ${ARGOCD_PASSWORD}${NC}"
 #               Deploy the app via ArgoCD          #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 
+# TODO: Add the future observability stack:
+# # - Prometheus
+# # - Grafana
+# # - Loki
+# # - Tempo
