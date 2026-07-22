@@ -33,5 +33,5 @@ go.work.sum
 
 node_modules/
 
-backend/tmp/
+backend/tmp/*
 backend/main

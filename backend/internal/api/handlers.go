@@ -17,28 +17,20 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func runRequest(ctx context.Context) (RunResponse, error) {
+func runRequest(ctx context.Context, request RunRequest, resp *RunResponse) {
 
-	var response RunResponse
+	// * DEBUG
+	fmt.Println("Running request with language:", request.Language)
+	fmt.Println("Running request with snippet:", request.Code)
 
 	select {
-	case <-ctx.Done():
-		fmt.Println("Request canceled by the client")
-		return response, fmt.Errorf("request canceled")
 	case <-time.After(5 * time.Second):
-		// Simulate job processing
-		response.Status = "completed"
-		fmt.Println("Job completed:", response)
-		return response, nil
-	default:
-		// Simulate job processing
-		time.Sleep(5 * time.Second)
-		response.Status = "completed"
-		fmt.Println("Job completed:", response)
+		fmt.Println("Task completed successfully")
+		resp.Status = "completed"
+	case <-ctx.Done():
+		fmt.Println("Task canceled due to timeout")
+		resp.Status = "timeout"
 	}
-
-	return response, nil
-
 }
 
 func RunRequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -58,15 +50,13 @@ func RunRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	ctx := r.Context()
-
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	resp, err := runRequest(ctx)
-	if err != nil {
-		http.Error(w, "Failed to process request", http.StatusInternalServerError)
-		return
-	}
+	var resp RunResponse
+	go runRequest(ctx, request, &resp)
+
+	<-ctx.Done()
 
 	json.NewEncoder(w).Encode(resp)
 }
