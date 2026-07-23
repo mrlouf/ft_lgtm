@@ -2,12 +2,11 @@ package backend
 
 import (
 	"context"
-	"fmt"
 	"log"
 )
 
 type Compiler interface {
-	Compile(ctx context.Context, source []byte) ([]byte, error)
+	Compile(ctx context.Context, source []byte, lang string) ([]byte, error)
 }
 
 type Executor interface {
@@ -36,19 +35,19 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 
 	log.Printf("Run: start for language: %s", language)
 
-	wasmBinary, err := b.Compiler.Compile(ctx, source)
+	wasmBinary, err := b.Compiler.Compile(ctx, source, language)
 	if err != nil {
-		return "", "", "", fmt.Errorf("compile: %w", err)
+		return "", "", "", err
 	}
 
 	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
-		return "", "", "", fmt.Errorf("execute: %w", err)
+		return "", "", "", err
 	}
 
 	cid, err := b.Publisher.Publish(ctx, []byte(stdout))
 	if err != nil {
-		return "", "", "", fmt.Errorf("publish: %w", err)
+		return "", "", "", err
 	}
 
 	return stdout, stderr, cid, nil

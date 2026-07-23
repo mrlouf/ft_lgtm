@@ -1,9 +1,13 @@
 package sandbox
 
 import (
+	"bytes"
 	"context"
-	"lgtm/internal/test"
+	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/tetratelabs/wazero"
@@ -46,16 +50,57 @@ func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
 	return s
 }
 
-func (s *WazeroSandbox) Compile(ctx context.Context, source []byte) ([]byte, error) {
+func compileGoToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.go")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "tinygo", "build", "-o", outPath, "-target=wasi", srcPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	// * DEBUG
+	log.Printf("compile: done, wasm binary at %s", outPath)
+	log.Printf("compile: binary size: %d bytes", func() int64 {
+		info, err := os.Stat(outPath)
+		if err != nil {
+			return 0
+		}
+		return info.Size()
+	}())
+
+	return os.ReadFile(outPath)
+}
+
+func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
 
 	log.Println("compile: start")
 
-	if err := test.SleepOrCancel(ctx, 2*time.Second, "compile"); err != nil {
-		return nil, err
+	var wasmBinary []byte
+	var err error
+
+	switch lang {
+	case "go":
+		wasmBinary, err = compileGoToWasm(ctx, source)
+	default:
+		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
 
 	log.Println("compile: done")
 
-	return []byte("fake-wasm-binary"), nil
+	return wasmBinary, err
 
 }
