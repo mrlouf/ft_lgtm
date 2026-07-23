@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/tetratelabs/wazero"
@@ -45,6 +46,8 @@ func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
 }
 
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte) ([]byte, error) {
+
+	fmt.Println("Compiler called")
 
 	return nil, nil
 

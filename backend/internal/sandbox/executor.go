@@ -1,6 +1,9 @@
 package sandbox
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type WazeroExecutor struct {
 	*WazeroSandbox
@@ -13,6 +16,8 @@ func NewWazeroExecutor(sandbox *WazeroSandbox) *WazeroExecutor {
 }
 
 func (e *WazeroExecutor) Execute(ctx context.Context, wasmBinary []byte) (stdout, stderr string, err error) {
+
+	fmt.Println("Executor called")
 
 	return "", "", nil
 

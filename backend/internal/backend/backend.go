@@ -30,5 +30,13 @@ func (b *Backend) Run(ctx context.Context, source []byte) (string, string, error
 		return "", "", fmt.Errorf("compile: %w", err)
 	}
 
-	return b.Executor.Execute(ctx, wasmBinary)
+	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
+	if err != nil {
+		return "", "", fmt.Errorf("execute: %w", err)
+	}
+
+	b.Publisher.Publish(ctx, []byte(stdout))
+
+	return stdout, stderr, nil
+
 }

@@ -44,6 +44,8 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 			return
 		}
 
+		time.Sleep(2 * time.Second) // Simulate some processing time
+
 		resp := Response{
 			ID:     "some-id",
 			Status: "completed",

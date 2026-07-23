@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"fmt"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
@@ -23,6 +24,8 @@ func NewIPFSClient() *IPFS {
 }
 
 func (ipfs *IPFS) Publish(ctx context.Context, data []byte) (string, error) {
+
+	fmt.Println("Publisher called")
 
 	return "", nil
 
