@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -45,7 +46,7 @@ func newServer(b *backend.Backend) *http.Server {
 func main() {
 
 	sb := sandbox.NewWazeroSandbox()
-	exe := sandbox.NewWazeroExecutor(sb)
+	exe := sandbox.NewWazeroExecutor(context.Background())
 	ipfs := ipfs.NewIPFSClient()
 
 	b := backend.NewBackend(sb, exe, ipfs)
