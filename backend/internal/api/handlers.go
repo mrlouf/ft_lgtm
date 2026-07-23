@@ -2,32 +2,69 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"lgtm/internal/backend"
 	"net/http"
 	"time"
 )
 
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
+type Request struct {
+	Code     string `json:"code"`
+	Language string `json:"language"`
+}
 
-	fmt.Println("Health check request from ", r.RemoteAddr)
+type Response struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+	Stdout string `json:"stdout,omitempty"`
+	Stderr string `json:"stderr,omitempty"`
+}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+func RunHandler(b *backend.Backend) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var request Request
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		stdout, stderr, err := b.Run(ctx, []byte(request.Code))
+		if err != nil {
+			http.Error(w, "Failed to run WASM", http.StatusInternalServerError)
+			return
+		}
+
+		resp := Response{
+			ID:     "some-id",
+			Status: "completed",
+			Stdout: stdout,
+			Stderr: stderr,
+		}
+
+		json.NewEncoder(w).Encode(resp)
+	}
 
 }
 
-func RunRequest(ctx context.Context, request Request) Response {
+func PublishHandler(b *backend.Backend) http.HandlerFunc {
 
-	// * DEBUG
-	fmt.Println("Running request with language:", request.Language)
-	fmt.Println("Running request with snippet:", request.Code)
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	select {
-	case <-time.After(5 * time.Second):
-		fmt.Println("Task completed successfully")
-		return Response{Status: "completed"}
-	case <-ctx.Done():
-		fmt.Println("Task canceled")
-		return Response{Status: "canceled"}
+		// * DEBUG
+		fmt.Println("Publish request incoming from ", r.RemoteAddr)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
 	}
 }

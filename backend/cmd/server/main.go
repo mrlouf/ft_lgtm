@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"lgtm/internal/api"
+	"lgtm/internal/backend"
+	"lgtm/internal/ipfs"
 	"lgtm/internal/sandbox"
-	"lgtm/internal/server"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -29,17 +29,19 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-func newServer(sb *sandbox.Sandbox) *http.Server {
+func newServer(sb *sandbox.WazeroSandbox, exe *sandbox.WazeroExecutor, ipfs *ipfs.IPFS) *http.Server {
 
-	s := &server.Server{
-		Sandbox: sb,
+	b := &backend.Backend{
+		Compiler:  sb,
+		Executor:  exe,
+		Publisher: ipfs,
 	}
 
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/health", api.HealthHandler)
-	mux.HandleFunc("/api/run", s.RunRequestHandler)
-	// mux.HandleFunc("/api/publish", sandbox.PublishRequestHandler)
+	mux.HandleFunc("/api/run", api.RunHandler(b))
+	mux.HandleFunc("/api/publish", api.PublishHandler(b))
 
 	return &http.Server{
 		Addr:    ":4242",
@@ -49,15 +51,11 @@ func newServer(sb *sandbox.Sandbox) *http.Server {
 
 func main() {
 
-	sb := sandbox.NewSandbox(
-		64*1024*1024,     // 64 MB memory limit
-		10*time.Second,   // 10 seconds timeout
-		1024*1024,        // 1 MB max stdout
-		1024*1024,        // 1 MB max stderr
-		[]string{"/tmp"}, // Allowed directories
-	)
+	sb := sandbox.NewWazeroSandbox()
+	exe := sandbox.NewWazeroExecutor(sb)
+	ipfs := ipfs.NewIPFSClient()
 
-	httpserver := newServer(sb)
+	httpserver := newServer(sb, exe, ipfs)
 
 	fmt.Println("LGTM Backend server running at http://localhost:4242")
 	log.Fatal(httpserver.ListenAndServe())

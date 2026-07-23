@@ -3,8 +3,8 @@ module lgtm
 go 1.26.2
 
 require (
-	github.com/bytecodealliance/wasmtime-go v1.0.0
 	github.com/ipfs/go-ipfs-api v0.7.0
+	github.com/tetratelabs/wazero v1.12.0
 )
 
 require (
@@ -31,7 +31,7 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
