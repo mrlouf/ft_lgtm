@@ -62,6 +62,11 @@ export default function Editor({
             return;
         }
 
+        const currentValue = view.state.doc.toString();
+        if (currentValue === code) {
+            return;
+        }
+
         view.dispatch({
             changes: {
                 from: 0,
