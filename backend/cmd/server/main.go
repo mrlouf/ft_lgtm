@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -29,13 +28,7 @@ func cors(next http.Handler) http.Handler {
 	})
 }
 
-func newServer(sb *sandbox.WazeroSandbox, exe *sandbox.WazeroExecutor, ipfs *ipfs.IPFS) *http.Server {
-
-	b := &backend.Backend{
-		Compiler:  sb,
-		Executor:  exe,
-		Publisher: ipfs,
-	}
+func newServer(b *backend.Backend) *http.Server {
 
 	mux := http.NewServeMux()
 
@@ -55,9 +48,11 @@ func main() {
 	exe := sandbox.NewWazeroExecutor(sb)
 	ipfs := ipfs.NewIPFSClient()
 
-	httpserver := newServer(sb, exe, ipfs)
+	b := backend.NewBackend(sb, exe, ipfs)
 
-	fmt.Println("LGTM Backend server running at http://localhost:4242")
+	httpserver := newServer(b)
+
+	log.Println("LGTM Backend server running at http://localhost:4242")
 	log.Fatal(httpserver.ListenAndServe())
 
 }

@@ -2,7 +2,8 @@ package sandbox
 
 import (
 	"context"
-	"fmt"
+	"lgtm/internal/test"
+	"log"
 	"time"
 
 	"github.com/tetratelabs/wazero"
@@ -47,8 +48,14 @@ func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
 
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte) ([]byte, error) {
 
-	fmt.Println("Compiler called")
+	log.Println("compile: start")
 
-	return nil, nil
+	if err := test.SleepOrCancel(ctx, 2*time.Second, "compile"); err != nil {
+		return nil, err
+	}
+
+	log.Println("compile: done")
+
+	return []byte("fake-wasm-binary"), nil
 
 }

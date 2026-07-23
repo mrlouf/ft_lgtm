@@ -2,7 +2,9 @@ package sandbox
 
 import (
 	"context"
-	"fmt"
+	"lgtm/internal/test"
+	"log"
+	"time"
 )
 
 type WazeroExecutor struct {
@@ -17,7 +19,13 @@ func NewWazeroExecutor(sandbox *WazeroSandbox) *WazeroExecutor {
 
 func (e *WazeroExecutor) Execute(ctx context.Context, wasmBinary []byte) (stdout, stderr string, err error) {
 
-	fmt.Println("Executor called")
+	log.Println("execute: start")
+
+	if err := test.SleepOrCancel(ctx, 2*time.Second, "execute"); err != nil {
+		return "", "", err
+	}
+
+	log.Println("execute: done")
 
 	return "", "", nil
 

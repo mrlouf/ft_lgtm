@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"lgtm/internal/backend"
+	"log"
 	"net/http"
 	"time"
 )
@@ -15,10 +15,39 @@ type Request struct {
 }
 
 type Response struct {
-	ID     string `json:"id"`
+	CID    string `json:"cid"`
 	Status string `json:"status"`
 	Stdout string `json:"stdout,omitempty"`
 	Stderr string `json:"stderr,omitempty"`
+}
+
+func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
+
+	log.Printf("Run failed: %v", err)
+
+	w.WriteHeader(http.StatusInternalServerError)
+
+	resp := Response{
+		Status: "failed",
+		Stderr: stderr,
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func returnSuccessResponse(w http.ResponseWriter, stdout, stderr, cid string) {
+
+	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n cid: %s", stdout, stderr, cid)
+
+	w.WriteHeader(http.StatusOK)
+	resp := Response{
+		CID:    cid,
+		Status: "completed",
+		Stdout: stdout,
+		Stderr: stderr,
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
 
 func RunHandler(b *backend.Backend) http.HandlerFunc {
@@ -32,30 +61,25 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 
 		ctx := r.Context()
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 8*time.Second)
 		defer cancel()
 
-		stdout, stderr, err := b.Run(ctx, []byte(request.Code))
+		source := []byte(request.Code)
+		language := request.Language
+
+		stdout, stderr, cid, err := b.Run(ctx, source, language)
 		if err != nil {
-			http.Error(w, "Failed to run WASM", http.StatusInternalServerError)
-			return
+
+			returnFailedResponse(w, stderr, err)
+
+		} else {
+
+			returnSuccessResponse(w, stdout, stderr, cid)
+
 		}
-
-		time.Sleep(2 * time.Second) // Simulate some processing time
-
-		resp := Response{
-			ID:     "some-id",
-			Status: "completed",
-			Stdout: stdout,
-			Stderr: stderr,
-		}
-
-		json.NewEncoder(w).Encode(resp)
 	}
-
 }
 
 func PublishHandler(b *backend.Backend) http.HandlerFunc {
@@ -63,7 +87,7 @@ func PublishHandler(b *backend.Backend) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// * DEBUG
-		fmt.Println("Publish request incoming from ", r.RemoteAddr)
+		log.Printf("Publish request incoming from %s", r.RemoteAddr)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

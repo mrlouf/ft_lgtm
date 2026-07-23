@@ -29,6 +29,9 @@ export default function RunButton({ code, language, onResult }: RunButtonProps) 
                 onResult(JSON.stringify(data, null, 2));
             })
             .catch((error) => {
+
+                console.error("Error running code:", error);
+
                 onResult(`Error running code: ${error.message}`);
             });
     }
