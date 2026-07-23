@@ -11,7 +11,9 @@ export default function RunButton({ code, language, onResult }: RunButtonProps) 
 
         onResult("Running code...");
 
-        fetch("http://localhost:4242/api/run", {
+        const apiUrl = "http://localhost:4242";
+
+        fetch(apiUrl + "/api/run", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
