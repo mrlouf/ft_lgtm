@@ -36,7 +36,7 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
 
                 onStatusChange("Completed");
 
-                const resultOutput = `Output:\n${data.stdout}\n\n`;
+                const resultOutput = `${data.stdout}\n\n`;
                 if (data.stderr) {
                     const errOutput = `Errors:\n${data.stderr}\n\n`;
                     onResult(resultOutput + errOutput);

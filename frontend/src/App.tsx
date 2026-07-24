@@ -50,15 +50,13 @@ export default function App() {
                     />
                 </header>
 
-                <div className="app-grid">
-                    <Editor
-                        code={code}
-                        language={language}
-                        onChange={setCode}
-                        onChangeLanguage={handleLanguageChange}
-                        resetVersion={resetVersion}
-                    />
-                </div>
+                <Editor
+                    code={code}
+                    language={language}
+                    onChange={setCode}
+                    onChangeLanguage={handleLanguageChange}
+                    resetVersion={resetVersion}
+                />
 
                 <Output output={output} />
 
