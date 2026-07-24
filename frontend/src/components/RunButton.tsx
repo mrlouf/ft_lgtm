@@ -26,7 +26,23 @@ export default function RunButton({ code, language, onResult }: RunButtonProps) 
 
             .then((response) => response.json())
             .then((data) => {
-                onResult(JSON.stringify(data, null, 2));
+
+                const output = JSON.stringify(data, null, 2);
+                console.log("Code execution result:", output);
+
+                if (data.status === "failed") {
+                    onResult(`Error: ${data.error}`);
+                } else {
+
+                    const resultOutput = `Output:\n${data.stdout}\n\n`;
+                    if (data.stderr) {
+                        const errOutput = `Errors:\n${data.stderr}\n\n`;
+                        onResult(resultOutput + errOutput);
+                    } else {
+                        onResult(resultOutput);
+                    }
+                }
+
             })
             .catch((error) => {
 

@@ -42,12 +42,12 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 
 	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
-		return "", "", "", err
+		return stdout, stderr, "", err
 	}
 
 	cid, err := b.Publisher.Publish(ctx, []byte(stdout))
 	if err != nil {
-		return "", "", "", err
+		return stdout, stderr, "", err
 	}
 
 	return stdout, stderr, cid, nil
