@@ -11,9 +11,9 @@ export default function RunButton({ code, language, onResult }: RunButtonProps) 
 
         onResult("Running code...");
 
-        const apiUrl = "http://localhost:4242";
+        const apiUrl = "http://backend:4242";
 
-        fetch(apiUrl + "/api/run", {
+        fetch("http://lgtm.local/api/run", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

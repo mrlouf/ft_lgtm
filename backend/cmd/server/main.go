@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
@@ -16,7 +17,15 @@ import (
 func cors(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+
+		if os.Getenv("ENV") == "production" {
+			// In production, you might want to restrict the allowed origins to your frontend domain.
+			w.Header().Set("Access-Control-Allow-Origin", "http://lgtm.local")
+		} else {
+			// In development, allow requests from localhost:5173 (Vite dev server).
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 

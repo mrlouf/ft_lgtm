@@ -27,7 +27,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://backend:4242
+      VITE_API_URL: http://localhost:4242
     depends_on:
       - backend
     networks:
