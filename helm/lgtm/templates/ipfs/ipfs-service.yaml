@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: ipfs
+  namespace: lgtm
+
+spec:
+  selector:
+    app: ipfs
+
+  ports:
+    - port: "{{ .Values.ipfs.service.ports[0] }}"
+      targetPort: "{{ .Values.ipfs.service.ports[0] }}"
+    - port: "{{ .Values.ipfs.service.ports[1] }}"
+      targetPort: "{{ .Values.ipfs.service.ports[1] }}"
+    - port: "{{ .Values.ipfs.service.ports[2] }}"
+      targetPort: "{{ .Values.ipfs.service.ports[2] }}"

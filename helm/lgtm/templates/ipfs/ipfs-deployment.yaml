@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ipfs
+spec:
+  replicas: {{ .Values.ipfs.replicaCount }}
+  selector:
+    matchLabels:
+      app: ipfs
+  template:
+    metadata:
+      labels:
+        app: ipfs
+    spec:
+      containers:
+      - name: ipfs
+        image: "{{ .Values.ipfs.image.repository }}:{{ .Values.ipfs.image.tag }}"
+        imagePullPolicy: {{ .Values.ipfs.image.pullPolicy }}
+        ports:
+        - containerPort: "{{ .Values.ipfs.service.ports[0] }}"
+        - containerPort: "{{ .Values.ipfs.service.ports[1] }}"
+        - containerPort: "{{ .Values.ipfs.service.ports[2] }}"
