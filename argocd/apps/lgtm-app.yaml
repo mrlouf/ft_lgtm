@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mrlouf/ft_lgtm.git
-    targetRevision: ipfs
+    targetRevision: refs/heads/ipfs
 
     path: helm/lgtm
 
