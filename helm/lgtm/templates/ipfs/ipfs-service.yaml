@@ -6,10 +6,14 @@ metadata:
   namespace: lgtm
 
 spec:
+  type: LoadBalancer
   selector:
     app: ipfs
 
   ports:
     - name: gateway
       port: {{ .Values.ipfs.service.gateway.port }}
-      targetPort: {{ .Values.ipfs.service.gateway.port }}
+      targetPort: gateway
+    - name: api
+      port: {{ .Values.ipfs.service.api.port }}
+      targetPort: api

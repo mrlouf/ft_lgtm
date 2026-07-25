@@ -7,7 +7,6 @@ metadata:
 
 spec:
   ingressClassName: {{ .Values.ingress.className }}
-
   rules:
     - host: {{ .Values.ingress.frontend.host }}
       http:
