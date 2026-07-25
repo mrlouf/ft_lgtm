@@ -9,7 +9,7 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
 
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.ingress.frontend.host }}
       http:
         paths:
           - path: /
@@ -19,3 +19,14 @@ spec:
                 name: frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
+
+    - host: {{ .Values.ingress.ipfs.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ipfs
+                port:
+                  number: {{ index .Values.ipfs.service.ports 0 }}
