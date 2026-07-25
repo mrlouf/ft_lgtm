@@ -10,9 +10,12 @@ spec:
     app: ipfs
 
   ports:
-    - port: {{ index .Values.ipfs.service.ports 0 }}
+    - name: gateway
+      port: {{ index .Values.ipfs.service.ports 0 }}
       targetPort: {{ index .Values.ipfs.service.ports 0 }}
-    - port: {{ index .Values.ipfs.service.ports 1 }}
+    - name: api
+      port: {{ index .Values.ipfs.service.ports 1 }}
       targetPort: {{ index .Values.ipfs.service.ports 1 }}
-    - port: {{ index .Values.ipfs.service.ports 2 }}
+    - name: swarm
+      port: {{ index .Values.ipfs.service.ports 2 }}
       targetPort: {{ index .Values.ipfs.service.ports 2 }}
