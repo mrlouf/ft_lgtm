@@ -2,9 +2,7 @@ package ipfs
 
 import (
 	"context"
-	"lgtm/internal/test"
 	"log"
-	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
@@ -28,10 +26,6 @@ func NewIPFSClient() *IPFS {
 func (ipfs *IPFS) Publish(ctx context.Context, data []byte) (string, error) {
 
 	log.Println("publish: start")
-
-	if err := test.SleepOrCancel(ctx, 2*time.Second, "publish"); err != nil {
-		return "", err
-	}
 
 	log.Println("publish: done")
 

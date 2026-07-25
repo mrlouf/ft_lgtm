@@ -87,7 +87,7 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		ctx := r.Context()
-		ctx, cancel := context.WithTimeout(ctx, 6*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
 
 		source := []byte(request.Code)

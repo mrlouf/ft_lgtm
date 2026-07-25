@@ -32,6 +32,9 @@ export default function RunButton({ code, language, onResult }: RunButtonProps) 
                     onResult(`Error: ${data.error}`);
                 } else {
 
+                    data.stdout = data.stdout || "";
+                    data.stderr = data.stderr || "";
+
                     const resultOutput = `Output:\n${data.stdout}\n\n`;
                     if (data.stderr) {
                         const errOutput = `Errors:\n${data.stderr}\n\n`;
