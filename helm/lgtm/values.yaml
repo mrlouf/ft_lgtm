@@ -36,9 +36,9 @@ backend:
 
 ipfs:
   service:
-    gateway:
-      port: 8080
     api:
+      port: 8080
+    gateway:
       port: 5001
     swarm:
       port: 4001
