@@ -85,8 +85,8 @@ export default function Editor({
                     onChangeLanguage={onChangeLanguage}
                 />
             </div>
-            <div className="panel-body">
-                <div ref={editorRef} />
+            <div className="panel-body editor-body">
+                <div ref={editorRef} className="editor-mount" />
             </div>
         </section>
     );
