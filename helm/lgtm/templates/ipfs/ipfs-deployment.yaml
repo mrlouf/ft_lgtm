@@ -16,10 +16,10 @@ spec:
       - name: ipfs
         image: "{{ .Values.ipfs.image.repository }}:{{ .Values.ipfs.image.tag }}"
         imagePullPolicy: {{ .Values.ipfs.image.pullPolicy }}
-        ports:
-        - name: gateway
-          containerPort: {{ index .Values.ipfs.service.ports 0 }}
-        - name: api
-          containerPort: {{ index .Values.ipfs.service.ports 1 }}
-        - name: swarm
-          containerPort: {{ index .Values.ipfs.service.ports 2 }}
+      ports:
+      - name: gateway
+        containerPort: {{ .Values.ipfs.service.gateway.port }}
+      - name: api
+        containerPort: {{ .Values.ipfs.service.api.port }}
+      - name: swarm
+        containerPort: {{ .Values.ipfs.service.swarm.port }}

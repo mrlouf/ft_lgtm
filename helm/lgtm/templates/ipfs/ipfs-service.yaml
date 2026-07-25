@@ -1,21 +1,12 @@
 apiVersion: v1
 kind: Service
-
 metadata:
   name: ipfs
   namespace: lgtm
-
 spec:
   selector:
     app: ipfs
-
   ports:
     - name: gateway
-      port: {{ index .Values.ipfs.service.ports 0 }}
-      targetPort: {{ index .Values.ipfs.service.ports 0 }}
-    - name: api
-      port: {{ index .Values.ipfs.service.ports 1 }}
-      targetPort: {{ index .Values.ipfs.service.ports 1 }}
-    - name: swarm
-      port: {{ index .Values.ipfs.service.ports 2 }}
-      targetPort: {{ index .Values.ipfs.service.ports 2 }}
+      port: {{ .Values.ipfs.service.gateway.port }}
+      targetPort: {{ .Values.ipfs.service.gateway.port }}

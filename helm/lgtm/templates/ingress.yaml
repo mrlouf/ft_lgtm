@@ -29,4 +29,4 @@ spec:
               service:
                 name: ipfs
                 port:
-                  number: {{ index .Values.ipfs.service.ports 0 }}
+                  number: {{ .Values.ipfs.service.gateway.port }}

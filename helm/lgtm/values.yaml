@@ -36,10 +36,13 @@ backend:
 
 ipfs:
   service:
-      ports:
-      - 5001 # Gateway
-      - 8080 # API
-      - 4001 # Swarm
+    gateway:
+      port: 8080
+    api:
+      port: 5001
+    swarm:
+      port: 4001
+
   image:
     repository: ipfs/kubo
     tag: v0.42.0
