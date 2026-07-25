@@ -10,8 +10,6 @@ import (
 	"lgtm/internal/backend"
 	"lgtm/internal/ipfs"
 	"lgtm/internal/sandbox"
-
-	"github.com/ipfs/boxo/gateway"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -48,8 +46,6 @@ func newServer(b *backend.Backend) *http.Server {
 	mux.HandleFunc("/api/run", api.RunHandler(b))
 	mux.HandleFunc("/api/publish", api.PublishHandler(b))
 
-	gwHandler := gateway.NewHandler(b.IPFS.GatewayConfig)
-
 	return &http.Server{
 		Addr:    ":4242",
 		Handler: cors(mux),
@@ -60,7 +56,10 @@ func main() {
 
 	sb := sandbox.NewWazeroSandbox()
 	exe := sandbox.NewWazeroExecutor(context.Background())
-	ipfs := ipfs.NewIPFSClient()
+	ipfs, err := ipfs.NewIPFSPublisher("http://kubo:5001")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	b := backend.NewBackend(sb, exe, ipfs)
 

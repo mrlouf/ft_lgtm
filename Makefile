@@ -23,6 +23,7 @@ GRAFANA_URL	= http://grafana.local
 ARGOCD_URL	= http://argocd.local
 
 APP_URL_DEV = http://localhost:5173
+APP_IPFS_DEV = http://localhost:5001/webui
 
 
 # ════════════════════════════════════════════════════════════
@@ -82,6 +83,7 @@ develop: ## Start the development environment
 	@docker compose -f dev/docker-compose.yaml up --build -d
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access IPFS at $(APP_IPFS_DEV)$(NC)"
 	@echo ''
 
 develop-stop: ## Stop the development environment

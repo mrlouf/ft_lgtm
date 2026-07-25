@@ -58,6 +58,9 @@ The monitoring and observability stack consists in the following applications ru
 - [CodeMirror Documentation](https://codemirror.net/docs/)
 - [Wazero Documentation](https://pkg.go.dev/github.com/tetratelabs/wazero@v1.12.0)
 
+- [IPFS Documentation](https://docs.ipfs.tech/)
+- [IPFS Retrieval Check](https://check.ipfs.network/)
+
 - [How to compile JavaScript to WebAssembly](https://vladvitan.medium.com/run-javascript-in-a-go-web-server-using-webassembly-0c4ba47f442d)
 
 ### AI Usage

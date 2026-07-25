@@ -38,6 +38,9 @@ services:
       context: ../kubo
       dockerfile: Dockerfile.dev
     container_name: lgtm-kubo
+    working_dir: /files
+    volumes:
+      - ../kubo:/files
     ports:
       - "5001:5001"
       - "8080:8080"
