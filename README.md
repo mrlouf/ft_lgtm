@@ -58,6 +58,8 @@ The monitoring and observability stack consists in the following applications ru
 - [CodeMirror Documentation](https://codemirror.net/docs/)
 - [Wazero Documentation](https://pkg.go.dev/github.com/tetratelabs/wazero@v1.12.0)
 
+- [How to compile JavaScript to WebAssembly](https://vladvitan.medium.com/run-javascript-in-a-go-web-server-using-webassembly-0c4ba47f442d)
+
 ### AI Usage
 
 For the development of this project, I used a combination of OpenAI's ChatGPT and Anthropic's Claude.

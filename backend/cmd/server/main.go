@@ -10,6 +10,8 @@ import (
 	"lgtm/internal/backend"
 	"lgtm/internal/ipfs"
 	"lgtm/internal/sandbox"
+
+	"github.com/ipfs/boxo/gateway"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -45,6 +47,8 @@ func newServer(b *backend.Backend) *http.Server {
 	mux.HandleFunc("/api/health", api.HealthHandler)
 	mux.HandleFunc("/api/run", api.RunHandler(b))
 	mux.HandleFunc("/api/publish", api.PublishHandler(b))
+
+	gwHandler := gateway.NewHandler(b.IPFS.GatewayConfig)
 
 	return &http.Server{
 		Addr:    ":4242",
