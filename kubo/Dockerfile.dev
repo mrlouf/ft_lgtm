@@ -1,0 +1,7 @@
+FROM ipfs/kubo:master-2026-07-25-bb563a7
+
+EXPOSE 5001 8080 4001
+
+CMD ["ipfs", "kubo"]
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
