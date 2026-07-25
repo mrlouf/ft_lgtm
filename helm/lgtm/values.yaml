@@ -1,11 +1,18 @@
 ingress:
   enabled: true
   className: traefik
-  host: lgtm.local
-  http:
-    paths:
-    unsecure: true
 
+  frontend:
+    host: lgtm.local
+    http:
+      paths:
+      unsecure: yes
+  
+  ipfs:
+    host: ipfs.lgtm.local
+    http:
+      paths:
+      unsecure: yes
 
 frontend:
   service:
@@ -23,6 +30,19 @@ backend:
   image:
     repository: lgtm_back
     tag: latest
+    pullPolicy: Always
+
+  replicaCount: 1
+
+ipfs:
+  service:
+      ports:
+      - 5001
+      - 8080
+      - 4001
+  image:
+    repository: ipfs/kubo
+    tag: v0.42.0
     pullPolicy: Always
 
   replicaCount: 1

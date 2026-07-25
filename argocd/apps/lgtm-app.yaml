@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mrlouf/ft_lgtm.git
-    targetRevision: main
+    targetRevision: ipfs
 
     path: helm/lgtm
 
@@ -36,6 +36,11 @@ spec:
           image:
             repository: ghcr.io/mrlouf/lgtm_back
             tag: latest
+
+        ipfs:
+          image:
+            repository: ipfs/kubo
+            tag: v0.42.0
 
   destination:
     server: https://kubernetes.default.svc
