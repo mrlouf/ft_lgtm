@@ -1,12 +1,12 @@
 global:
-  domain: argocd.local
+  domain: argocd.lgtm.local
 
 server:
   ingress:
     enabled: true
     ingressClassName: traefik
     hosts:
-      - argocd.local
+      - argocd.lgtm.local
     path: /
 
 configs:

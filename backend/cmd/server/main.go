@@ -56,7 +56,10 @@ func main() {
 
 	sb := sandbox.NewWazeroSandbox()
 	exe := sandbox.NewWazeroExecutor(context.Background())
-	ipfs := ipfs.NewIPFSClient()
+	ipfs, err := ipfs.NewIPFSPublisher("http://kubo:5001")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	b := backend.NewBackend(sb, exe, ipfs)
 

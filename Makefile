@@ -18,11 +18,12 @@ NC			= \033[0m
 CLUSTER_NAME = lgtm
 
 APP_URL		= http://lgtm.local
-IPFS_URL	= http://ipfs.local
-GRAFANA_URL	= http://grafana.local
-ARGOCD_URL	= http://argocd.local
+IPFS_URL	= http://ipfs.lgtm.local
+GRAFANA_URL	= http://grafana.lgtm.local
+ARGOCD_URL	= http://argocd.lgtm.local
 
 APP_URL_DEV = http://localhost:5173
+APP_IPFS_DEV = http://localhost:5001/webui
 
 
 # ════════════════════════════════════════════════════════════
@@ -71,7 +72,7 @@ clean: ## Delete cluster
 	@printf "\n$(RED)Are you sure you want to delete the cluster $(CLUSTER_NAME)? This action cannot be undone. (y/n)$(NC)\n"
 	@read answer; \
 	if [ "$$answer" != "$(answer#[Yy])" ] ;then \
-		k3d cluster delete $(CLUSTER_NAME) \
+		k3d cluster delete $(CLUSTER_NAME); \
 	else \
 		echo "Aborting cluster deletion."; \
 	fi
@@ -82,6 +83,7 @@ develop: ## Start the development environment
 	@docker compose -f dev/docker-compose.yaml up --build -d
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access IPFS at $(APP_IPFS_DEV)$(NC)"
 	@echo ''
 
 develop-stop: ## Stop the development environment

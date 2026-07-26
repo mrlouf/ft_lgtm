@@ -120,6 +120,41 @@ func compileJSToWasm(ctx context.Context, source []byte) ([]byte, error) {
 	return os.ReadFile(outPath)
 }
 
+func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.py")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "py2wasm", srcPath, "-o", outPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	// * DEBUG
+	log.Printf("compile: done, wasm binary at %s", outPath)
+	log.Printf("compile: binary size: %d bytes", func() int64 {
+		info, err := os.Stat(outPath)
+		if err != nil {
+			return 0
+		}
+		return info.Size()
+	}())
+
+	return os.ReadFile(outPath)
+}
+
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
 
 	log.Println("compile: start")
@@ -132,6 +167,8 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 		wasmBinary, err = compileGoToWasm(ctx, source)
 	case "javascript", "js":
 		wasmBinary, err = compileJSToWasm(ctx, source)
+	case "python", "py":
+		wasmBinary, err = compilePythonToWasm(ctx, source)
 	default:
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}

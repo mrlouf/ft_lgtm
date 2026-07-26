@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"lgtm/internal/backend"
+	"lgtm/internal/ipfs"
 	"log"
 	"net/http"
 	"strings"
@@ -16,11 +17,12 @@ type Request struct {
 }
 
 type Response struct {
-	CID    string `json:"cid"`
-	Status string `json:"status"`
-	Stdout string `json:"stdout,omitempty"`
-	Stderr string `json:"stderr,omitempty"`
-	Error  string `json:"error,omitempty"`
+	SourceCID string `json:"source_cid"`
+	OutputCID string `json:"output_cid"`
+	Status    string `json:"status"`
+	Stdout    string `json:"stdout,omitempty"`
+	Stderr    string `json:"stderr,omitempty"`
+	Error     string `json:"error,omitempty"`
 }
 
 func getHTTPStatusFromError(err error) int {
@@ -59,16 +61,17 @@ func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(w http.ResponseWriter, stdout, stderr, cid string) {
+func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid ipfs.ResponseCID) {
 
-	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n cid: %s", stdout, stderr, cid)
+	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 
 	w.WriteHeader(http.StatusOK)
 	resp := Response{
-		CID:    cid,
-		Status: "completed",
-		Stdout: stdout,
-		Stderr: stderr,
+		SourceCID: cid.Source,
+		OutputCID: cid.Stdout,
+		Status:    "completed",
+		Stdout:    stdout,
+		Stderr:    stderr,
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -87,17 +90,17 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		ctx := r.Context()
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 		defer cancel()
 
 		source := []byte(request.Code)
 		language := request.Language
 
-		stdout, stderr, cid, err := b.Run(ctx, source, language)
+		stdout, stderr, responseCID, err := b.Run(ctx, source, language)
 		if err != nil {
 			returnFailedResponse(w, stderr, err)
 		} else {
-			returnSuccessResponse(w, stdout, stderr, cid)
+			returnSuccessResponse(w, stdout, stderr, responseCID)
 		}
 	}
 }
