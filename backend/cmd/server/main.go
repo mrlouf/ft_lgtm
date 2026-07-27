@@ -56,7 +56,15 @@ func main() {
 
 	sb := sandbox.NewWazeroSandbox()
 	exe := sandbox.NewWazeroExecutor(context.Background())
-	ipfs, err := ipfs.NewIPFSPublisher("http://kubo:5001")
+
+	var gatewayURL string
+	if os.Getenv("ENV") == "production" {
+		gatewayURL = "http://ipfs:5001"
+	} else {
+		gatewayURL = "http://kubo:5001"
+	}
+
+	ipfs, err := ipfs.NewIPFSPublisher(gatewayURL)
 	if err != nil {
 		log.Fatal(err)
 	}
