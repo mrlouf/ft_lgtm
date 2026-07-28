@@ -10,7 +10,7 @@ type RunButtonProps = {
 
 export default function RunButton({ code, language, onResult, onStatusChange }: RunButtonProps) {
     function handleRun() {
-        onStatusChange("Running", "N/A");
+        onStatusChange("Running", "");
         onResult("Running code...");
 
         fetch("/api/run", {
@@ -30,7 +30,7 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
 
                 if (data.status === "failed") {
 
-                    onStatusChange("Error", "N/A");
+                    onStatusChange("Error", "");
                     onResult(`Error: ${data.error}`);
 
                 } else {
@@ -46,7 +46,7 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
                         onResult(resultOutput);
                     }
 
-                    const sourceCid = data.source_cid || "N/A";
+                    const sourceCid = data.source_cid || "";
                     console.log("Source CID:", sourceCid);
                     onStatusChange("Completed", sourceCid);
 
@@ -55,7 +55,7 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
             })
             .catch((error) => {
                 console.error("Error running code:", error);
-                onStatusChange("Error", "N/A");
+                onStatusChange("Error", "");
                 onResult(`Error running code: ${error.message}`);
             });
     }

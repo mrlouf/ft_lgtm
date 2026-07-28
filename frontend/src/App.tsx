@@ -17,7 +17,7 @@ export default function App() {
     const [output, setOutput] = useState("Waiting for execution...");
     const [status, setStatus] = useState<Status>("Ready");
     const [resetVersion, setResetVersion] = useState(0);
-    const [cid, setCid] = useState("N/A");
+    const [cid, setCid] = useState("");
 
     function handleStatusChange(nextStatus: Status, nextCid: string) {
         setStatus(nextStatus);
@@ -30,7 +30,7 @@ export default function App() {
         setOutput("Waiting for execution...");
         setStatus("Ready");
         setResetVersion((value) => value + 1);
-        setCid("N/A");
+        setCid("");
     }
 
     function handleEnterCID(nextCid: string) {
@@ -67,7 +67,7 @@ export default function App() {
         setOutput("Waiting for execution...");
         setStatus("Ready");
         setResetVersion((value) => value + 1);
-        setCid("N/A");
+        setCid("");
     }
 
     return (
