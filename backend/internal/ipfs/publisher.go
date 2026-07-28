@@ -49,6 +49,9 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	response.Source = sourceBlock.Path().String()
 	response.Stdout = outputBlock.Path().String()
 
+	response.Source = response.Source[6:] // Remove the "/ipfs/" prefix
+	response.Stdout = response.Stdout[6:]
+
 	log.Println("publish: block published:", response.Source)
 	log.Println("publish: block published:", response.Stdout)
 
