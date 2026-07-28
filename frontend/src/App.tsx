@@ -17,6 +17,12 @@ export default function App() {
     const [output, setOutput] = useState("Waiting for execution...");
     const [status, setStatus] = useState<Status>("Ready");
     const [resetVersion, setResetVersion] = useState(0);
+    const [cid, setCid] = useState("N/A");
+
+    function handleStatusChange(nextStatus: Status, nextCid: string) {
+        setStatus(nextStatus);
+        setCid(nextCid);
+    }
 
     function handleLanguageChange(nextLanguage: Language) {
         setLanguage(nextLanguage);
@@ -24,6 +30,36 @@ export default function App() {
         setOutput("Waiting for execution...");
         setStatus("Ready");
         setResetVersion((value) => value + 1);
+        setCid("N/A");
+    }
+
+    function handleEnterCID(nextCid: string) {
+        const gatewayUrl = import.meta.env.VITE_IPFS_GATEWAY_URL ?? "http://localhost:8080";
+
+        fetch(`${gatewayUrl}/ipfs/${nextCid}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "text/plain",
+            },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch CID ${nextCid}`);
+                }
+                return response.text();
+            })
+            .then((source) => {
+                setCode(source);
+                setCid(nextCid);
+                setOutput("Loaded source from IPFS");
+                setStatus("Ready");
+                setResetVersion((value) => value + 1);
+            })
+            .catch((error) => {
+                console.error("Error fetching snippet:", error);
+                setOutput(`Error loading CID: ${error.message}`);
+                setStatus("Error");
+            });
     }
 
     function handleReset() {
@@ -31,6 +67,7 @@ export default function App() {
         setOutput("Waiting for execution...");
         setStatus("Ready");
         setResetVersion((value) => value + 1);
+        setCid("N/A");
     }
 
     return (
@@ -46,21 +83,23 @@ export default function App() {
                         code={code}
                         language={language}
                         onResult={setOutput}
-                        onStatusChange={setStatus}
+                        onStatusChange={handleStatusChange}
                     />
                 </header>
 
                 <Editor
                     code={code}
                     language={language}
+                    cid={cid}
                     onChange={setCode}
                     onChangeLanguage={handleLanguageChange}
+                    onEnterCID={handleEnterCID}
                     resetVersion={resetVersion}
                 />
 
                 <Output output={output} />
 
-                <StatusBar status={status} />
+                <StatusBar status={status} snippetCID={cid} />
             </div>
         </main>
     );

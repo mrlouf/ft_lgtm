@@ -9,13 +9,14 @@ const statusColors: Record<Status, string> = {
 
 type StatusBarProps = {
     status: Status;
+    snippetCID?: string;
 };
 
-export default function StatusBar({ status }: StatusBarProps) {
+export default function StatusBar({ status, snippetCID }: StatusBarProps) {
     return (
         <footer className="status-bar">
             <span style={{ color: statusColors[status] }}>{status}</span>
-            <span>Local node secured</span>
+            <span style={{}}> {snippetCID}</span>
         </footer>
     );
 }
