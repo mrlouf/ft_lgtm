@@ -42,6 +42,7 @@ func newServer(b *backend.Backend) *http.Server {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/metrics", api.PrometheusMetricsHandler())
 	mux.HandleFunc("/api/health", api.HealthHandler)
 	mux.HandleFunc("/api/run", api.RunHandler(b))
 	mux.HandleFunc("/api/publish", api.PublishHandler(b))

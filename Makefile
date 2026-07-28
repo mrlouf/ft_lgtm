@@ -22,8 +22,11 @@ IPFS_URL	= http://ipfs.lgtm.local
 GRAFANA_URL	= http://grafana.lgtm.local
 ARGOCD_URL	= http://argocd.lgtm.local
 
+
+
 APP_URL_DEV = http://localhost:5173
 APP_IPFS_DEV = http://localhost:5001/webui
+APP_PROMETHEUS_DEV = http://localhost:9090
 
 
 # ════════════════════════════════════════════════════════════
@@ -84,6 +87,7 @@ develop: ## Start the development environment
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
 	@echo -e "$(BLUE)🌐 Access IPFS at $(APP_IPFS_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access Prometheus at $(APP_PROMETHEUS_DEV)$(NC)"
 	@echo ''
 
 develop-stop: ## Stop the development environment

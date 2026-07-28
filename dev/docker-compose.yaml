@@ -47,6 +47,16 @@ services:
     networks:
       - lgtm
 
+  prometheus:
+    image: prom/prometheus:main-distroless@sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
+    container_name: lgtm-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - lgtm
+
 networks:
   lgtm:
     driver: bridge
