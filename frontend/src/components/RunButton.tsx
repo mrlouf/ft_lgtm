@@ -5,12 +5,12 @@ type RunButtonProps = {
     code: string;
     language: Language;
     onResult: (output: string) => void;
-    onStatusChange: (status: Status, cid: string) => void;
+    onStatusChange: (status: Status) => void;
 };
 
 export default function RunButton({ code, language, onResult, onStatusChange }: RunButtonProps) {
     function handleRun() {
-        onStatusChange("Running", "N/A");
+        onStatusChange("Running");
         onResult("Running code...");
 
         fetch("/api/run", {
@@ -29,10 +29,8 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
                 console.log("Code execution result:", output);
 
                 if (data.status === "failed") {
-
-                    onStatusChange("Error", "N/A");
+                    onStatusChange("Error");
                     onResult(`Error: ${data.error}`);
-
                 } else {
 
                     data.stdout = data.stdout || "";
@@ -45,17 +43,21 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
                     } else {
                         onResult(resultOutput);
                     }
-
-                    const sourceCid = data.source_cid || "N/A";
-                    console.log("Source CID:", sourceCid);
-                    onStatusChange("Completed", sourceCid);
-
                 }
 
+                onStatusChange("Completed");
+
+                const resultOutput = `${data.stdout}\n\n`;
+                if (data.stderr) {
+                    const errOutput = `Errors:\n${data.stderr}\n\n`;
+                    onResult(resultOutput + errOutput);
+                } else {
+                    onResult(resultOutput);
+                }
             })
             .catch((error) => {
                 console.error("Error running code:", error);
-                onStatusChange("Error", "N/A");
+                onStatusChange("Error");
                 onResult(`Error running code: ${error.message}`);
             });
     }
