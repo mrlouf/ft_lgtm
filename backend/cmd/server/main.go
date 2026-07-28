@@ -8,8 +8,9 @@ import (
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
+	"lgtm/internal/compiler"
+	"lgtm/internal/executor"
 	"lgtm/internal/publisher"
-	"lgtm/internal/sandbox"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -54,8 +55,8 @@ func newServer(b *backend.Backend) *http.Server {
 
 func main() {
 
-	sb := sandbox.NewWazeroSandbox()
-	exe := sandbox.NewWazeroExecutor(context.Background())
+	sb := compiler.NewWazeroSandbox()
+	exe := executor.NewWazeroExecutor(context.Background())
 
 	var gatewayURL string
 	if os.Getenv("ENV") == "production" {
