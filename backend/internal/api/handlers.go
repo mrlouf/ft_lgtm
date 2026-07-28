@@ -29,6 +29,12 @@ type Response struct {
 	Error     string `json:"error,omitempty"`
 }
 
+type Metrics struct {
+	TotalRequests prometheus.Counter `json:"total_requests"`
+	Successful    prometheus.Counter `json:"successful"`
+	Failed        prometheus.Counter `json:"failed"`
+}
+
 func getHTTPStatusFromError(err error) int {
 
 	log.Printf("Classifying error: %v", err)
