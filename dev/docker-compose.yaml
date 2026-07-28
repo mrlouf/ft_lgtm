@@ -47,6 +47,10 @@ services:
     networks:
       - lgtm
 
+####################################################################
+##                        LGTM Stack                              ##
+####################################################################
+
   prometheus:
     image: prom/prometheus:main-distroless@sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
     container_name: lgtm-prometheus
@@ -54,6 +58,20 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - lgtm
+
+  grafana:
+    image: grafana/grafana:nightly-slim@sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
+    container_name: lgtm-grafana
+    volumes:
+    - ./observability/grafana/provisioning:/etc/grafana/provisioning
+    - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
     networks:
       - lgtm
 
