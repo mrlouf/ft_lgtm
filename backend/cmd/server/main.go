@@ -8,7 +8,7 @@ import (
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
-	"lgtm/internal/ipfs"
+	"lgtm/internal/publisher"
 	"lgtm/internal/sandbox"
 )
 
@@ -64,12 +64,12 @@ func main() {
 		gatewayURL = "http://kubo:5001"
 	}
 
-	ipfs, err := ipfs.NewIPFSPublisher(gatewayURL)
+	p, err := publisher.NewIPFSPublisher(gatewayURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	b := backend.NewBackend(sb, exe, ipfs)
+	b := backend.NewBackend(sb, exe, p)
 
 	httpserver := newServer(b)
 

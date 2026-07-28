@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"lgtm/internal/backend"
-	"lgtm/internal/ipfs"
+	"lgtm/internal/publisher"
 	"log"
 	"net/http"
 	"strings"
@@ -61,7 +61,7 @@ func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid ipfs.ResponseCID) {
+func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
 	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 

@@ -1,4 +1,4 @@
-package ipfs
+package publisher
 
 import (
 	"bytes"
