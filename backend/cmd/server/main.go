@@ -5,12 +5,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
 	"lgtm/internal/compiler"
 	"lgtm/internal/executor"
 	"lgtm/internal/publisher"
+	"lgtm/internal/telemetry"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -20,10 +24,9 @@ func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if os.Getenv("ENV") == "production" {
-			// In production, you might want to restrict the allowed origins to your frontend domain.
 			w.Header().Set("Access-Control-Allow-Origin", "http://lgtm.local")
 		} else {
-			// In development, allow requests from localhost:5173 (Vite dev server).
+			// In development, allow requests from any origin for testing purposes.
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
@@ -43,6 +46,7 @@ func newServer(b *backend.Backend) *http.Server {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/metrics", api.PrometheusMetricsHandler())
 	mux.HandleFunc("/api/health", api.HealthHandler)
 	mux.HandleFunc("/api/run", api.RunHandler(b))
 	mux.HandleFunc("/api/publish", api.PublishHandler(b))
@@ -55,17 +59,25 @@ func newServer(b *backend.Backend) *http.Server {
 
 func main() {
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := shutdownTracing(context.Background()); err != nil {
+			log.Printf("tracing shutdown: %v", err)
+		}
+	}()
+
 	sb := compiler.NewWazeroSandbox()
 	exe := executor.NewWazeroExecutor(context.Background())
 
-	var gatewayURL string
-	if os.Getenv("ENV") == "production" {
-		gatewayURL = "http://ipfs:5001"
-	} else {
-		gatewayURL = "http://kubo:5001"
-	}
-
+	gatewayURL := "http://ipfs:5001"
 	p, err := publisher.NewIPFSPublisher(gatewayURL)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +86,18 @@ func main() {
 
 	httpserver := newServer(b)
 
-	log.Println("LGTM Backend server running at http://localhost:4242")
-	log.Fatal(httpserver.ListenAndServe())
+	go func() {
+		log.Println("LGTM Backend server running at http://localhost:4242")
+		log.Fatal(httpserver.ListenAndServe())
+	}()
 
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Println("Shutting down server...")
+	if err := httpserver.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown: %v", err)
+	}
 }

@@ -4,6 +4,9 @@ import (
 	"context"
 	"lgtm/internal/publisher"
 	"log"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Compiler interface {
@@ -22,17 +25,25 @@ type Backend struct {
 	Compiler  Compiler
 	Executor  Executor
 	Publisher Publisher
+	Tracer    trace.Tracer
 }
 
 func NewBackend(compiler Compiler, executor Executor, publisher Publisher) *Backend {
+
+	tracer := otel.Tracer("lgtm-backend")
+
 	return &Backend{
 		Compiler:  compiler,
 		Executor:  executor,
 		Publisher: publisher,
+		Tracer:    tracer,
 	}
 }
 
 func (b *Backend) Run(ctx context.Context, source []byte, language string) (string, string, publisher.ResponseCID, error) {
+
+	ctx, span := b.Tracer.Start(ctx, "backend.run")
+	defer span.End()
 
 	log.Printf("Run: start for language: %s", language)
 
@@ -43,11 +54,13 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 
 	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
+    span.RecordError(err)
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
 	responseCID, err := b.Publisher.Publish(ctx, source, []byte(stdout))
 	if err != nil {
+		span.RecordError(err)
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 

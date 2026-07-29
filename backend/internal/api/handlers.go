@@ -9,6 +9,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Request struct {
@@ -23,6 +27,12 @@ type Response struct {
 	Stdout    string `json:"stdout,omitempty"`
 	Stderr    string `json:"stderr,omitempty"`
 	Error     string `json:"error,omitempty"`
+}
+
+type Metrics struct {
+	TotalRequests prometheus.Counter `json:"total_requests"`
+	Successful    prometheus.Counter `json:"successful"`
+	Failed        prometheus.Counter `json:"failed"`
 }
 
 func getHTTPStatusFromError(err error) int {
@@ -75,6 +85,19 @@ func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid pub
 	}
 
 	json.NewEncoder(w).Encode(resp)
+}
+
+func PrometheusMetricsHandler() http.HandlerFunc {
+
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(w, r)
+	}
 }
 
 func RunHandler(b *backend.Backend) http.HandlerFunc {
