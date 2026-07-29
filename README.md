@@ -61,6 +61,8 @@ The monitoring and observability stack consists in the following applications ru
 - [IPFS Documentation](https://docs.ipfs.tech/)
 - [IPFS Retrieval Check](https://check.ipfs.network/)
 
+- [Open Telemetry Documentation](https://opentelemetry.io/docs/)
+
 - [How to compile JavaScript to WebAssembly](https://vladvitan.medium.com/run-javascript-in-a-go-web-server-using-webassembly-0c4ba47f442d)
 
 ### AI Usage
