@@ -61,7 +61,8 @@ services:
     ports:
       - "4317:4317" # gRPC receiver
       #- "4318:4318" # HTTP receiver for clients that don't support gRPC
-      - "55679:55679" # Debug web UI for dev
+      - "55679:55679" # Debug web UI for 
+      - "8889:8889" # Prometheus metrics endpoint
     networks:
       - lgtm
 

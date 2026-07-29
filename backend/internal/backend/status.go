@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 )
 
 type CompileError struct{ Err error }
@@ -46,19 +47,26 @@ func (s RunStatus) String() string {
 	}
 }
 
-func ClassifyError(err error) RunStatus {
+func classifyStatus(err error) RunStatus {
+
 	var compileErr *CompileError
 	var executeErr *ExecuteError
+
 	switch {
 	case err == nil:
+		log.Println("Classifying error: success")
 		return StatusSuccess
 	case errors.Is(err, context.DeadlineExceeded):
+		log.Println("Classifying error: timeout")
 		return StatusTimeout
 	case errors.As(err, &compileErr):
+		log.Println("Classifying error: compile error")
 		return StatusCompileError
 	case errors.As(err, &executeErr):
+		log.Println("Classifying error: execute error")
 		return StatusExecuteError
 	default:
+		log.Println("Classifying error: unknown")
 		return StatusUnknown
 	}
 }

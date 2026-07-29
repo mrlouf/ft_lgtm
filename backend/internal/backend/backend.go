@@ -2,10 +2,14 @@ package backend
 
 import (
 	"context"
-	"lgtm/internal/publisher"
 	"log"
+	"time"
 
-	"go.opentelemetry.io/otel"
+	"lgtm/internal/publisher"
+	"lgtm/internal/telemetry"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -26,43 +30,64 @@ type Backend struct {
 	Executor  Executor
 	Publisher Publisher
 	Tracer    trace.Tracer
+	Metrics   *telemetry.ApplicationMetrics
 }
 
-func NewBackend(compiler Compiler, executor Executor, publisher Publisher) *Backend {
+func NewBackend(
+	compiler Compiler,
+	executor Executor,
+	publisher Publisher,
+	tracer trace.Tracer,
+	meter metric.Meter) *Backend {
 
-	tracer := otel.Tracer("lgtm-backend")
+	metrics := telemetry.NewApplicationMetrics(meter)
 
 	return &Backend{
 		Compiler:  compiler,
 		Executor:  executor,
 		Publisher: publisher,
 		Tracer:    tracer,
+		Metrics:   metrics,
 	}
 }
 
 func (b *Backend) Run(ctx context.Context, source []byte, language string) (string, string, publisher.ResponseCID, error) {
 
+	start := time.Now()
 	ctx, span := b.Tracer.Start(ctx, "backend.run")
 	defer span.End()
 
 	log.Printf("Run: start for language: %s", language)
+	b.Metrics.RunCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language)))
 
 	wasmBinary, err := b.Compiler.Compile(ctx, source, language)
 	if err != nil {
+		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "compile")))
 		return "", "", publisher.ResponseCID{}, err
 	}
 
 	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
-    span.RecordError(err)
+		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "execute")))
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
 	responseCID, err := b.Publisher.Publish(ctx, source, []byte(stdout))
 	if err != nil {
 		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "publish")))
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
+
+	status := classifyStatus(err)
+
+	log.Println("Run: completed with status:", status.String())
+
+	b.Metrics.SuccessCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("status", status.String())))
+
+	b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
 
 	return stdout, stderr, responseCID, nil
 

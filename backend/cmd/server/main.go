@@ -46,7 +46,7 @@ func newServer(b *backend.Backend) *http.Server {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/metrics", api.PrometheusMetricsHandler())
+	// mux.HandleFunc("/metrics", api.PrometheusMetricsHandler())
 	mux.HandleFunc("/api/health", api.HealthHandler)
 	mux.HandleFunc("/api/run", api.RunHandler(b))
 	mux.HandleFunc("/api/publish", api.PublishHandler(b))
@@ -62,15 +62,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
+	tracer, shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		if err := shutdownTracing(context.Background()); err != nil {
-			log.Printf("tracing shutdown: %v", err)
-		}
-	}()
+	defer shutdownTracing(context.Background())
+
+	meter, shutdownMetrics, err := telemetry.InitMetrics(ctx, "otel-collector:4317")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownMetrics(context.Background())
 
 	sb := compiler.NewWazeroSandbox()
 	exe := executor.NewWazeroExecutor(context.Background())
@@ -82,7 +84,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	b := backend.NewBackend(sb, exe, p)
+	b := backend.NewBackend(sb, exe, p, tracer, meter)
 
 	httpserver := newServer(b)
 
