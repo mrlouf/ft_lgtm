@@ -11,7 +11,12 @@ exporters:
 processors:
   batch: {}
 
+extensions:
+  zpages:
+    endpoint: :55679
+
 service:
+  extensions: [zpages]
   pipelines:
     traces:
       receivers: [otlp]

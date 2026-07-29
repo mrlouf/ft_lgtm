@@ -28,6 +28,7 @@ APP_URL_DEV = http://localhost:5173
 APP_IPFS_DEV = http://localhost:5001/webui
 APP_PROMETHEUS_DEV = http://localhost:9090
 APP_GRAFANA_DEV = http://localhost:3000
+APP_OTEL_DEV = http://localhost:55679/debug/servicez
 
 
 # ════════════════════════════════════════════════════════════
@@ -88,6 +89,8 @@ develop: ## Start the development environment
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
 	@echo -e "$(BLUE)🌐 Access IPFS at $(APP_IPFS_DEV)$(NC)"
+	@echo ""
+	@echo -e "$(BLUE)🌐 Access the OpenTelemetry Collector at $(APP_OTEL_DEV)$(NC)"
 	@echo -e "$(BLUE)🌐 Access Prometheus at $(APP_PROMETHEUS_DEV)$(NC)"
 	@echo -e "$(BLUE)🌐 Access Grafana at $(APP_GRAFANA_DEV)$(NC)"
 	@echo ''
