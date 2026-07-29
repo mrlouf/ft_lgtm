@@ -2,7 +2,7 @@ package backend
 
 import (
 	"context"
-	"lgtm/internal/ipfs"
+	"lgtm/internal/publisher"
 	"log"
 
 	"go.opentelemetry.io/otel"
@@ -18,7 +18,7 @@ type Executor interface {
 }
 
 type Publisher interface {
-	Publish(ctx context.Context, source []byte, stdout []byte) (response ipfs.ResponseCID, err error)
+	Publish(ctx context.Context, source []byte, stdout []byte) (response publisher.ResponseCID, err error)
 }
 
 type Backend struct {
@@ -40,7 +40,7 @@ func NewBackend(compiler Compiler, executor Executor, publisher Publisher) *Back
 	}
 }
 
-func (b *Backend) Run(ctx context.Context, source []byte, language string) (string, string, ipfs.ResponseCID, error) {
+func (b *Backend) Run(ctx context.Context, source []byte, language string) (string, string, publisher.ResponseCID, error) {
 
 	ctx, span := b.Tracer.Start(ctx, "backend.run")
 	defer span.End()
@@ -49,19 +49,19 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 
 	wasmBinary, err := b.Compiler.Compile(ctx, source, language)
 	if err != nil {
-		return "", "", ipfs.ResponseCID{}, err
+		return "", "", publisher.ResponseCID{}, err
 	}
 
 	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
-		span.RecordError(err)
-		return stdout, stderr, ipfs.ResponseCID{}, err
+    span.RecordError(err)
+		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
 	responseCID, err := b.Publisher.Publish(ctx, source, []byte(stdout))
 	if err != nil {
 		span.RecordError(err)
-		return stdout, stderr, ipfs.ResponseCID{}, err
+		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
 	return stdout, stderr, responseCID, nil

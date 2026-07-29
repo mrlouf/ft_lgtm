@@ -11,8 +11,9 @@ import (
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
-	"lgtm/internal/ipfs"
-	"lgtm/internal/sandbox"
+	"lgtm/internal/compiler"
+	"lgtm/internal/executor"
+	"lgtm/internal/publisher"
 	"lgtm/internal/telemetry"
 )
 
@@ -71,16 +72,17 @@ func main() {
 		}
 	}()
 
-	sb := sandbox.NewWazeroSandbox()
-	exe := sandbox.NewWazeroExecutor(context.Background())
+	sb := compiler.NewWazeroSandbox()
+	exe := executor.NewWazeroExecutor(context.Background())
 
 	gatewayURL := "http://ipfs:5001"
-	ipfs, err := ipfs.NewIPFSPublisher(gatewayURL)
+	p, err := publisher.NewIPFSPublisher(gatewayURL)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	b := backend.NewBackend(sb, exe, ipfs)
+	b := backend.NewBackend(sb, exe, p)
 
 	httpserver := newServer(b)
 
