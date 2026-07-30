@@ -12,11 +12,11 @@ spec:
 
   ports:
     - name: grpc
-      port: {{ .Values.otel-collector.service.grpc.port }}
+      port: {{ .Values.otelcollector.service.grpc.port }}
       targetPort: grpc
     - name: webui
-      port: {{ .Values.otel-collector.service.webui.port }}
+      port: {{ .Values.otelcollector.service.webui.port }}
       targetPort: webui
     - name: prometheus
-      port: {{ .Values.otel-collector.service.prometheus.port }}
+      port: {{ .Values.otelcollector.service.prometheus.port }}
       targetPort: prometheus

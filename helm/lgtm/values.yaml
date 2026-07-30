@@ -50,7 +50,8 @@ ipfs:
 
   replicaCount: 1
 
-otel-collector:
+# Helm does not allow hyphens in keys, so I remove it here for the values template.
+otelcollector:
   service:
     grpc:
       port: 4317
