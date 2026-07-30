@@ -24,7 +24,6 @@ spec:
         - name: grafana
           image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}@{{ .Values.grafana.image.digest }}"
           imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
-          args: ["--config", "/etc/grafana/config.yaml"]
 
           volumeMounts:
             - name: grafana-provisioning
