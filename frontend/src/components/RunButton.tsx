@@ -47,7 +47,6 @@ export default function RunButton({ code, language, onResult, onStatusChange }: 
                     }
 
                     const sourceCid = data.source_cid || "";
-                    console.log("Source CID:", sourceCid);
                     onStatusChange("Completed", sourceCid);
 
                 }

@@ -18,11 +18,19 @@ export default function App() {
     const [status, setStatus] = useState<Status>("Ready");
     const [resetVersion, setResetVersion] = useState(0);
     const [cid, setCid] = useState("");
+    const [snippetCID, setSnippetCID] = useState("");
 
-    function handleStatusChange(nextStatus: Status, nextCid: string) {
-        setStatus(nextStatus);
-        setCid(nextCid);
+function handleStatusChange(nextStatus: Status, nextCid: string) {
+    setStatus(nextStatus);
+
+    if (nextStatus === "Completed") {
+        setSnippetCID(nextCid);
+    } else if (nextStatus === "Running") {
+        setSnippetCID("");
+    } else if (nextStatus === "Error") {
+        setSnippetCID("");
     }
+}
 
     function handleLanguageChange(nextLanguage: Language) {
         setLanguage(nextLanguage);
@@ -99,7 +107,7 @@ export default function App() {
 
                 <Output output={output} />
 
-                <StatusBar status={status} snippetCID={cid} />
+                <StatusBar status={status} snippetCID={snippetCID} />
             </div>
         </main>
     );
