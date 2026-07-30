@@ -11,12 +11,5 @@ spec:
 
 
   ports:
-    - name: grpc
-      port: {{ .Values.prometheus.service.grpc.port }}
-      targetPort: grpc
-    - name: webui
-      port: {{ .Values.prometheus.service.webui.port }}
-      targetPort: webui
-    - name: prometheus
-      port: {{ .Values.prometheus.service.prometheus.port }}
-      targetPort: prometheus
+      port: {{ .Values.prometheus.service.port }}
+      targetPort: {{ .Values.prometheus.service.port }}
