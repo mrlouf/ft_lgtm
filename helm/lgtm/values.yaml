@@ -66,3 +66,22 @@ otelcollector:
     pullPolicy: Always
 
   replicaCount: 1
+
+prometheus:
+  service:
+    port: 9090
+  image:
+    repository: prom/prometheus
+    tag: main-distroless
+    digest: sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
+    pullPolicy: Always
+
+  replicaCount: 1
+
+grafana:
+  service:
+    port: 3000
+  image:
+    repository: grafana/grafana
+    tag: nightly-slim
+    digest: sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363

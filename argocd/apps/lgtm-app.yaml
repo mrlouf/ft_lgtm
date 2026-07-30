@@ -49,6 +49,12 @@ spec:
             tag: 0.158.0-nightly.3484eb0-amd64
             digest: sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
 
+        prometheus:
+          image:
+            repository: prom/prometheus
+            tag: main-distroless
+            digest: sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
+
   destination:
     server: https://kubernetes.default.svc
     namespace: lgtm
