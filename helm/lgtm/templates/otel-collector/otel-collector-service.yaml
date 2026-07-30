@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: otel-collector
+  namespace: lgtm
+
+spec:
+  selector:
+    app: otel-collector
+
+  ports:
+    - name: grpc
+      port: {{ .Values.otelcollector.service.grpc.port }}
+      targetPort: grpc
+    - name: webui
+      port: {{ .Values.otelcollector.service.webui.port }}
+      targetPort: webui
+    - name: prometheus
+      port: {{ .Values.otelcollector.service.prometheus.port }}
+      targetPort: prometheus

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: otel-collector
+  namespace: lgtm
+
+  annotations:
+    checksum/config: {{ .Files.Get "files/otel-collector-config.yaml" | sha256sum }}
+
+spec:
+  replicas: {{ .Values.otelcollector.replicaCount }}
+  selector:
+    matchLabels:
+      app: otel-collector
+
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+
+    spec:
+      containers:
+        - name: otel-collector
+          image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}"
+          imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
+          args: ["--config", "/etc/otel/config.yaml"]
+
+          volumeMounts:
+            - name: otel-config
+              mountPath: /etc/otel
+
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.otelcollector.service.grpc.port }}
+            - name: webui
+              containerPort: {{ .Values.otelcollector.service.webui.port }}
+            - name: prometheus
+              containerPort: {{ .Values.otelcollector.service.prometheus.port }}
+
+      volumes:
+        - name: otel-config
+          configMap:
+            name: otel-collector-config
