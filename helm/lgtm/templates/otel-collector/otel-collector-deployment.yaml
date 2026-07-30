@@ -25,6 +25,7 @@ spec:
           image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}"
           imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
           command: ["--config", "/etc/otel-collector-config.yaml"]
+          
           volumeMounts:
             - name: otel-config
               mountPath: /etc/otel
