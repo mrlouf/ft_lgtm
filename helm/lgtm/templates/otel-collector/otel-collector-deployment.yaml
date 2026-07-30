@@ -6,7 +6,7 @@ metadata:
   namespace: lgtm
 
 spec:
-  replicas: {{ .Values.otel-collector.replicaCount }}
+  replicas: {{ .Values.otelcollector.replicaCount }}
   selector:
     matchLabels:
       app: otel-collector
@@ -19,12 +19,12 @@ spec:
     spec:
       containers:
         - name: otel-collector
-          image: "{{ .Values.otel-collector.image.repository }}:{{ .Values.otel-collector.image.tag }}"
-          imagePullPolicy: {{ .Values.otel-collector.image.pullPolicy }}
+          image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}"
+          imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.otel-collector.service.grpc.port }}
+              containerPort: {{ .Values.otelcollector.service.grpc.port }}
             - name: webui
-              containerPort: {{ .Values.otel-collector.service.webui.port }}
+              containerPort: {{ .Values.otelcollector.service.webui.port }}
             - name: prometheus
-              containerPort: {{ .Values.otel-collector.service.prometheus.port }}
+              containerPort: {{ .Values.otelcollector.service.prometheus.port }}
