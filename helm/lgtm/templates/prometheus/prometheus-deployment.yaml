@@ -30,7 +30,7 @@ spec:
               mountPath: /etc/prometheus
 
           ports:
-              containerPort: {{ .Values.prometheus.service.port }}
+            - containerPort: {{ .Values.prometheus.service.port }}
 
       volumes:
         - name: prometheus-config
