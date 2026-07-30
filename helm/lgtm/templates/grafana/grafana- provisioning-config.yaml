@@ -6,7 +6,7 @@ metadata:
   namespace: lgtm
 
 data:
+  datasources.yaml: |
+{{ .Files.Get "files/grafana/provisioning/datasources/datasources.yaml" | indent 4 }}
   dashboards.yaml: |
 {{ .Files.Get "files/grafana/provisioning/dashboards/dashboards.yaml" | indent 4 }}
-  datasources.yaml: |
-{{ .Files.Get "files/grafana/provisioning/datasources/datasource.yaml" | indent 4 }}
