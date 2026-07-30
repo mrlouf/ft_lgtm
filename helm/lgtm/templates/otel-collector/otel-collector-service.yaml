@@ -6,7 +6,6 @@ metadata:
   namespace: lgtm
 
 spec:
-  type: LoadBalancer
   selector:
     app: otel-collector
 
