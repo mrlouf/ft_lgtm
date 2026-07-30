@@ -6,7 +6,8 @@ metadata:
   namespace: lgtm
 
   annotations:
-    checksum/config: {{ .Files.Get "files/otel-collector-config.yaml" | sha256sum }}
+    checksum/datasources: {{ .Files.Get "files/grafana/provisioning/datasources/datasources.yaml" | sha256sum }}
+    checksum/dashboards: {{ .Files.Get "files/grafana/provisioning/dashboards/dashboards.yaml" | sha256sum }}
 
 spec:
   replicas: {{ .Values.grafana.replicaCount }}
@@ -27,10 +28,10 @@ spec:
 
           volumeMounts:
             - name: grafana-provisioning
-              mountPath: /etc/grafana/provisioning/datasources
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               subPath: datasources.yaml
             - name: grafana-provisioning
-              mountPath: /etc/grafana/provisioning/dashboards
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
               subPath: dashboards.yaml
 
             - name: grafana-dashboards
