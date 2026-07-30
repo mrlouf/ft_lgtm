@@ -6,5 +6,5 @@ metadata:
   namespace: lgtm
 
 data:
-  prometheus.yaml: |
+  prometheus.yml: |
 {{ .Files.Get "files/prometheus-config.yaml" | indent 4 }}
