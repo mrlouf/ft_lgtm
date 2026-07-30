@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: otel-collector
+  namespace: lgtm
+
+spec:
+  type: LoadBalancer
+  selector:
+    app: otel-collector
+
+  ports:
+    - name: grpc
+      port: {{ .Values.otel-collector.service.grpc.port }}
+      targetPort: grpc
+    - name: webui
+      port: {{ .Values.otel-collector.service.webui.port }}
+      targetPort: webui
+    - name: prometheus
+      port: {{ .Values.otel-collector.service.prometheus.port }}
+      targetPort: prometheus

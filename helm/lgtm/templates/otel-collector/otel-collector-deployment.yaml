@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: otel-collector
+  namespace: lgtm
+
+spec:
+  replicas: {{ .Values.otel-collector.replicaCount }}
+  selector:
+    matchLabels:
+      app: otel-collector
+
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+
+    spec:
+      containers:
+        - name: otel-collector
+          image: "{{ .Values.otel-collector.image.repository }}:{{ .Values.otel-collector.image.tag }}"
+          imagePullPolicy: {{ .Values.otel-collector.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.otel-collector.service.grpc.port }}
+            - name: webui
+              containerPort: {{ .Values.otel-collector.service.webui.port }}
+            - name: prometheus
+              containerPort: {{ .Values.otel-collector.service.prometheus.port }}

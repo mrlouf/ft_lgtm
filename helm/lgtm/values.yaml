@@ -49,3 +49,19 @@ ipfs:
     pullPolicy: Always
 
   replicaCount: 1
+
+otel-collector:
+  service:
+    grpc:
+      port: 4317
+    webui:
+      port: 55679
+    prometheus:
+      port: 8889
+  image:
+    repository: otel/opentelemetry-collector
+    tag: 0.158.0-nightly.3484eb0-amd64
+    digest: sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
+    pullPolicy: Always
+
+  replicaCount: 1

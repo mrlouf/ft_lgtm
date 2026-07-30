@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mrlouf/ft_lgtm.git
-    targetRevision: refs/heads/ipfs
+    targetRevision: refs/heads/k8s/monitoring
 
     path: helm/lgtm
 
@@ -41,6 +41,13 @@ spec:
           image:
             repository: ipfs/kubo
             tag: v0.42.0
+            digest: sha256:8907cb0cc1ad5798f6bb1bb1341a800990c268e021cedfa317e8aa1a33864214
+
+        otel-collector:
+          image:
+            repository: otel/opentelemetry-collector
+            tag: 0.158.0-nightly.3484eb0-amd64
+            digest: sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
 
   destination:
     server: https://kubernetes.default.svc
