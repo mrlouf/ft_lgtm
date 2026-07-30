@@ -1,3 +1,0 @@
-FROM ipfs/kubo:v0.42.0
-
-EXPOSE 5001 8080 4001
