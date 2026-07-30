@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: grafana-dashboards
+  namespace: lgtm
+
+data:
+  application.json: |
+{{ .Files.Get "files/grafana/dashboards/dashboards.yaml" | indent 4 }}
+  backend.json: |
+{{ .Files.Get "files/grafana/dashboards/backend.json" | indent 4 }}
+  
