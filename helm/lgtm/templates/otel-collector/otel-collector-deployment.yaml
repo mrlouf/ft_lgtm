@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: otel-collector
-          image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}"
+          image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}@{{ .Values.otelcollector.image.digest }}"
           imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
           args: ["--config", "/etc/otel/config.yaml"]
 

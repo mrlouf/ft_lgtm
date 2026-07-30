@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: prometheus
+  namespace: lgtm
+
+  annotations:
+    checksum/config: {{ .Files.Get "files/prometheus-config.yaml" | sha256sum }}
+
+spec:
+  replicas: {{ .Values.otelcollector.replicaCount }}
+  selector:
+    matchLabels:
+      app: prometheus
+
+  template:
+    metadata:
+      labels:
+        app: prometheus
+
+    spec:
+      containers:
+        - name: prometheus
+          image: "{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}@{{ .Values.prometheus.image.digest }}"
+          imagePullPolicy: {{ .Values.prometheus.image.pullPolicy }}
+          args: ["--config", "/etc/prometheus/config.yaml"]
+
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus
+
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.prometheus.service.grpc.port }}
+            - name: webui
+              containerPort: {{ .Values.prometheus.service.webui.port }}
+            - name: prometheus
+              containerPort: {{ .Values.prometheus.service.prometheus.port }}
+
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
