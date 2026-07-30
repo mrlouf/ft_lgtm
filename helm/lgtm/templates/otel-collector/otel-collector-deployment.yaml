@@ -21,6 +21,11 @@ spec:
         - name: otel-collector
           image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}"
           imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
+          command: ["--config", "/etc/otel-collector-config.yaml"]
+          volumeMounts:
+            - name: otel-collector-config
+              mountPath: /etc/otel-collector-config.yaml
+              subPath: otel-collector-config.yaml
           ports:
             - name: grpc
               containerPort: {{ .Values.otelcollector.service.grpc.port }}
