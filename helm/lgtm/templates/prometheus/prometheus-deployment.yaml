@@ -9,7 +9,7 @@ metadata:
     checksum/config: {{ .Files.Get "files/prometheus-config.yaml" | sha256sum }}
 
 spec:
-  replicas: {{ .Values.otelcollector.replicaCount }}
+  replicas: {{ .Values.prometheus.replicaCount }}
   selector:
     matchLabels:
       app: prometheus
@@ -31,12 +31,7 @@ spec:
               mountPath: /etc/prometheus
 
           ports:
-            - name: grpc
-              containerPort: {{ .Values.prometheus.service.grpc.port }}
-            - name: webui
-              containerPort: {{ .Values.prometheus.service.webui.port }}
-            - name: prometheus
-              containerPort: {{ .Values.prometheus.service.prometheus.port }}
+              containerPort: {{ .Values.prometheus.service.port }}
 
       volumes:
         - name: prometheus-config
