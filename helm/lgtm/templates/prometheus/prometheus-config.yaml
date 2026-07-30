@@ -7,4 +7,4 @@ metadata:
 
 data:
   prometheus.yml: |
-{{ .Files.Get "files/prometheus-config.yaml" | indent 4 }}
+{{ .Files.Get "files/prometheus-config.yml" | indent 4 }}
