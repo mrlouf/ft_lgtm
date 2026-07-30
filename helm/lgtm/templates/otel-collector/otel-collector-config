@@ -6,5 +6,5 @@ metadata:
   namespace: lgtm
 
 data:
-  otel-collector-config.yaml: |
+  config.yaml: |
 {{ .Files.Get "files/otel-collector-config.yaml" | indent 4 }}
