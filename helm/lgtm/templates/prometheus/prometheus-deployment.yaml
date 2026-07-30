@@ -24,7 +24,6 @@ spec:
         - name: prometheus
           image: "{{ .Values.prometheus.image.repository }}:{{ .Values.prometheus.image.tag }}@{{ .Values.prometheus.image.digest }}"
           imagePullPolicy: {{ .Values.prometheus.image.pullPolicy }}
-          args: ["--config", "/etc/prometheus/prometheus.yaml"]
 
           volumeMounts:
             - name: prometheus-config

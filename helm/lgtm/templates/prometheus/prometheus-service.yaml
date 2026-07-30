@@ -9,7 +9,6 @@ spec:
   selector:
     app: prometheus
 
-
   ports:
-      port: {{ .Values.prometheus.service.port }}
+    - port: {{ .Values.prometheus.service.port }}
       targetPort: {{ .Values.prometheus.service.port }}
