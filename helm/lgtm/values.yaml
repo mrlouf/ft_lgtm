@@ -67,7 +67,6 @@ otelcollector:
 
   replicaCount: 1
 
-
 prometheus:
   service:
     port: 9090
@@ -78,4 +77,11 @@ prometheus:
     pullPolicy: Always
 
   replicaCount: 1
-    
+
+grafana:
+  service:
+    port: 3000
+  image:
+    repository: grafana/grafana
+    tag: nightly-slim
+    digest: sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
