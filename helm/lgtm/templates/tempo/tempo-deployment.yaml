@@ -24,7 +24,7 @@ spec:
         - name: tempo
           image: "{{ .Values.tempo.image.repository }}:{{ .Values.tempo.image.tag }}@{{ .Values.tempo.image.digest }}"
           imagePullPolicy: {{ .Values.tempo.image.pullPolicy }}
-          command: ["-target=all", "-config.file=/etc/tempo/tempo.yaml"]
+          args: ["-target=all", "-config.file=/etc/tempo/tempo.yaml"]
 
           volumeMounts:
             - name: tempo-config
