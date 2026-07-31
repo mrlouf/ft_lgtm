@@ -34,9 +34,9 @@ spec:
           ports:
             - name: backend
               containerPort: {{ .Values.tempo.service.backend }}
-            - name: otlp-grpc
+            - name: grpc
               containerPort: {{ .Values.tempo.service.grpc }}
-            - name: otlp-http
+            - name: http
               containerPort: {{ .Values.tempo.service.http }}
 
       volumes:

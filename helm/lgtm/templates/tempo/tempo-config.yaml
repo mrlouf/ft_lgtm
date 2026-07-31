@@ -6,5 +6,5 @@ metadata:
   namespace: lgtm
 
 data:
-  tempo.yml: |
+  tempo.yaml: |
 {{ .Files.Get "files/tempo-config.yaml" | indent 4 }}
