@@ -73,7 +73,12 @@ func main() {
 	}
 	defer shutdownMetrics(context.Background())
 
-	sb := compiler.NewWazeroSandbox()
+	sb, shutdownSandbox, err := compiler.NewWazeroSandbox()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownSandbox(context.Background())
+
 	exe := executor.NewWazeroExecutor(context.Background())
 
 	gatewayURL := "http://ipfs:5001"

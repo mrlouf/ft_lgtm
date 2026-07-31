@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"lgtm/internal/telemetry"
 	"log"
 	"os"
 	"os/exec"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tetratelabs/wazero"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WazeroSandbox struct {
@@ -20,6 +22,7 @@ type WazeroSandbox struct {
 	maxStdout   int
 	maxStderr   int
 	allowedDirs []string
+	tracer      trace.Tracer
 }
 
 type Option func(*WazeroSandbox)
@@ -32,8 +35,7 @@ func WithMemoryLimit(bytes int64) Option {
 	return func(s *WazeroSandbox) { s.memoryLimit = bytes }
 }
 
-func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
-
+func NewWazeroSandbox(opts ...Option) (*WazeroSandbox, func(context.Context) error, error) {
 	s := &WazeroSandbox{
 		memoryLimit: 64 * 1024 * 1024,
 		timeout:     10 * time.Second,
@@ -47,7 +49,10 @@ func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
 		opt(s)
 	}
 
-	return s
+	tracer, shutdownTracing, err := telemetry.InitTracing(context.Background(), "otel-collector:4317")
+	s.tracer = tracer
+
+	return s, shutdownTracing, err
 }
 
 func compileGoToWasm(ctx context.Context, source []byte) ([]byte, error) {
@@ -158,6 +163,8 @@ func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
 
 	log.Println("compile: start")
+	ctx, span := s.tracer.Start(ctx, "compiler.compile")
+	defer span.End()
 
 	var wasmBinary []byte
 	var err error
@@ -170,6 +177,7 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 	case "python", "py":
 		wasmBinary, err = compilePythonToWasm(ctx, source)
 	default:
+		span.RecordError(fmt.Errorf("unsupported language: %s", lang))
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
 
