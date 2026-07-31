@@ -63,16 +63,21 @@ func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string,
 
 	log.Printf("Run failed: %v", err)
 
+	w.WriteHeader(getHTTPStatusFromError(err))
+
 	resp := Response{
 		Status: "failed",
 		Stderr: stderr,
 		Error:  err.Error(),
 	}
 
+	httpStatus := getHTTPStatusFromError(err)
 	span.AddEvent("Run failed", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
 		attribute.String("stderr", stderr),
 		attribute.String("error", err.Error()),
 	))
+
 	json.NewEncoder(w).Encode(resp)
 }
 
@@ -90,7 +95,11 @@ func returnSuccessResponse(span trace.Span, w http.ResponseWriter, stdout, stder
 		Stderr:    stderr,
 	}
 
+	httpStatus := http.StatusOK
+	w.WriteHeader(httpStatus)
+
 	span.AddEvent("Run succeeded", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
 		attribute.String("stdout", stdout),
 		attribute.String("stderr", stderr),
 		attribute.String("source_cid", cid.Source),
