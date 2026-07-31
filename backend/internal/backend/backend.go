@@ -54,36 +54,40 @@ func NewBackend(
 	}
 }
 
-func (b *Backend) Run(ctx context.Context, source []byte, language string) (string, string, publisher.ResponseCID, error) {
+type RunSpecs struct {
+	Language string
+	Source   []byte
+	Start    time.Time
+	Ctx      context.Context
+	Span     trace.Span
+}
 
-	start := time.Now()
-	ctx, span := b.Tracer.Start(ctx, "backend.run")
-	defer span.End()
+func (b *Backend) Run(r RunSpecs) (string, string, publisher.ResponseCID, error) {
 
-	log.Printf("Run: start for language: %s", language)
-	b.Metrics.RunCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language)))
+	log.Printf("Run: start for language: %s", r.Language)
+	b.Metrics.RunCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language)))
 
-	wasmBinary, err := b.Compiler.Compile(ctx, source, language)
+	wasmBinary, err := b.Compiler.Compile(r.Ctx, r.Source, r.Language)
 	if err != nil {
-		span.RecordError(err)
-		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "compile")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
+		r.Span.RecordError(err)
+		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "compile")))
+		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
 		return "", "", publisher.ResponseCID{}, err
 	}
 
-	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
+	stdout, stderr, err := b.Executor.Execute(r.Ctx, wasmBinary)
 	if err != nil {
-		span.RecordError(err)
-		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "execute")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
+		r.Span.RecordError(err)
+		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "execute")))
+		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
-	responseCID, err := b.Publisher.Publish(ctx, source, []byte(stdout))
+	responseCID, err := b.Publisher.Publish(r.Ctx, r.Source, []byte(stdout))
 	if err != nil {
-		span.RecordError(err)
-		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "publish")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
+
+		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "publish")))
+		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
@@ -91,8 +95,8 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 
 	log.Println("Run: completed with status:", status.String())
 
-	b.Metrics.SuccessCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("status", status.String())))
-	b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
+	b.Metrics.SuccessCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("status", status.String())))
+	b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
 
 	return stdout, stderr, responseCID, nil
 

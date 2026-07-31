@@ -116,13 +116,23 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 		defer cancel()
 
-		source := []byte(request.Code)
-		language := request.Language
+		ctx, span := b.Tracer.Start(ctx, "backend.run")
+		defer span.End()
 
-		stdout, stderr, responseCID, err := b.Run(ctx, source, language)
+		var run backend.RunSpecs = backend.RunSpecs{
+			Language: request.Language,
+			Source:   []byte(request.Code),
+			Start:    time.Now(),
+			Ctx:      ctx,
+			Span:     span,
+		}
+
+		stdout, stderr, responseCID, err := b.Run(run)
 		if err != nil {
+			span.RecordError(err)
 			returnFailedResponse(w, stderr, err)
 		} else {
+			span.AddEvent("Run completed successfully")
 			returnSuccessResponse(w, stdout, stderr, responseCID)
 		}
 	}
