@@ -7,6 +7,8 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -87,8 +89,18 @@ func InitTracing(ctx context.Context, collectorEndpoint string) (trace.Tracer, f
 		return nil, nil, err
 	}
 
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName("lgtm:backend"),
+		),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
 	)
 
 	tracer := tp.Tracer("lgtm/backend")

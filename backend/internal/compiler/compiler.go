@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/tetratelabs/wazero"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -178,6 +179,10 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
 
+	span.AddEvent("compile completed", trace.WithAttributes(
+		attribute.String("language", lang),
+		attribute.Int("wasm_binary_size", len(wasmBinary)),
+	))
 	log.Println("compile: done")
 
 	return wasmBinary, err

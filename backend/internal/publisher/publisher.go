@@ -55,6 +55,7 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 		span.RecordError(err)
 		return response, fmt.Errorf("ipfs add stdout: %w", err)
 	}
+	span.AddEvent("blocks published")
 
 	response.Source = sourceBlock.Path().String()
 	response.Stdout = outputBlock.Path().String()
