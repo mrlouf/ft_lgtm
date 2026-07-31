@@ -33,11 +33,11 @@ spec:
 
           ports:
             - name: backend
-              containerPort: {{ .Values.tempo.service.backend }}
+              containerPort: {{ .Values.tempo.service.backend.port }}
             - name: grpc
-              containerPort: {{ .Values.tempo.service.grpc }}
+              containerPort: {{ .Values.tempo.service.grpc.port }}
             - name: http
-              containerPort: {{ .Values.tempo.service.http }}
+              containerPort: {{ .Values.tempo.service.http.port }}
 
       volumes:
         - name: tempo-config

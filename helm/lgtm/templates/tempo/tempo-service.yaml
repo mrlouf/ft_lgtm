@@ -11,11 +11,11 @@ spec:
 
   ports:
     - name: backend
-      port: {{ .Values.tempo.service.backend }}
-      targetPort: {{ .Values.tempo.service.backend }}
+      port: {{ .Values.tempo.service.backend.port }}
+      targetPort: backend
     - name: grpc
-      port: {{ .Values.tempo.service.grpc }}
-      targetPort: {{ .Values.tempo.service.grpc }}
+      port: {{ .Values.tempo.service.grpc.port }}
+      targetPort: grpc
     - name: http
-      port: {{ .Values.tempo.service.http }}
-      targetPort: {{ .Values.tempo.service.http }}
+      port: {{ .Values.tempo.service.http.port }}
+      targetPort: http
