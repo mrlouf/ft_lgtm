@@ -58,8 +58,8 @@ spec:
         tempo:
           image:
             repository: grafana/tempo
-            tag: main-df7893f-1993-1
-            digest: sha256:2ccd769a02a6d1602e9096e444aeb493c574e0e96d5decd80d36b286bc670ad2
+            tag: 3.0.2
+            digest: sha256:cda87c212d8c584dc0b89e337e7ed648a5100feb657e5d528480ee4fa03dbbe3
 
   destination:
     server: https://kubernetes.default.svc
