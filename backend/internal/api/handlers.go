@@ -61,9 +61,6 @@ func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
 
 	log.Printf("Run failed: %v", err)
 
-	httpStatus := getHTTPStatusFromError(err)
-	w.WriteHeader(httpStatus)
-
 	resp := Response{
 		Status: "failed",
 		Stderr: stderr,
@@ -77,7 +74,6 @@ func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid pub
 
 	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 
-	w.WriteHeader(http.StatusOK)
 	resp := Response{
 		SourceCID: cid.Source,
 		OutputCID: cid.Stdout,
@@ -134,9 +130,11 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		stdout, stderr, responseCID, err := b.Run(run)
 		if err != nil {
 			span.RecordError(err)
+			w.WriteHeader(getHTTPStatusFromError(err))
 			returnFailedResponse(w, stderr, err)
 		} else {
 			span.AddEvent("Run completed successfully")
+			w.WriteHeader(http.StatusOK)
 			returnSuccessResponse(w, stdout, stderr, responseCID)
 		}
 	}
