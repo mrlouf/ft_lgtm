@@ -28,7 +28,7 @@ spec:
 
           volumeMounts:
             - name: tempo-config
-              mountPath: /etc/tempo
+              mountPath: /etc/tempo/tempo.yaml
               subPath: tempo.yaml
 
           ports:
