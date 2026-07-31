@@ -5,26 +5,36 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lgtm/internal/telemetry"
 	"log"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"github.com/tetratelabs/wazero/sys"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WazeroExecutor struct {
 	runtime wazero.Runtime
+	tracer  trace.Tracer
 }
 
-func NewWazeroExecutor(ctx context.Context) *WazeroExecutor {
+func NewWazeroExecutor(ctx context.Context) (*WazeroExecutor, func(context.Context) error, error) {
 	r := wazero.NewRuntime(ctx)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
-	return &WazeroExecutor{runtime: r}
+
+	tracer, shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
+
+	return &WazeroExecutor{
+		runtime: r,
+		tracer:  tracer}, shutdownTracing, err
 }
 
 func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout, stderr string, err error) {
 
 	log.Println("execute: start")
+	ctx, span := e.tracer.Start(ctx, "executor.execute")
+	defer span.End()
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 
@@ -53,6 +63,7 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 			log.Println("execute: done (clean exit)")
 			return stdoutBuf.String(), stderrBuf.String(), nil
 		}
+		span.RecordError(err)
 		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("instantiate: %w", err)
 	}
 

@@ -79,7 +79,11 @@ func main() {
 	}
 	defer shutdownSandbox(context.Background())
 
-	exe := executor.NewWazeroExecutor(context.Background())
+	exe, shutdownExecutor, err := executor.NewWazeroExecutor(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownExecutor(context.Background())
 
 	gatewayURL := "http://ipfs:5001"
 	p, err := publisher.NewIPFSPublisher(gatewayURL)
