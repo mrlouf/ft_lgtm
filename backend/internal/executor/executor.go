@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"lgtm/internal/telemetry"
 	"log"
 
 	"github.com/tetratelabs/wazero"
@@ -19,15 +18,14 @@ type WazeroExecutor struct {
 	tracer  trace.Tracer
 }
 
-func NewWazeroExecutor(ctx context.Context) (*WazeroExecutor, func(context.Context) error, error) {
+func NewWazeroExecutor(ctx context.Context, t trace.Tracer) *WazeroExecutor {
 	r := wazero.NewRuntime(ctx)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-	tracer, shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
-
 	return &WazeroExecutor{
 		runtime: r,
-		tracer:  tracer}, shutdownTracing, err
+		tracer:  t,
+	}
 }
 
 func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout, stderr string, err error) {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"lgtm/internal/telemetry"
 	"log"
 	"net/http"
 
@@ -23,21 +22,16 @@ type IPFSPublisher struct {
 	tracer trace.Tracer
 }
 
-func NewIPFSPublisher(daemonURL string) (*IPFSPublisher, func(context.Context) error, error) {
+func NewIPFSPublisher(t trace.Tracer, daemonURL string) *IPFSPublisher {
 	node, err := rpc.NewURLApiWithClient(daemonURL, http.DefaultClient)
 	if err != nil {
-		return nil, nil, fmt.Errorf("ipfs client: %w", err)
+		return nil
 	}
 
-	publisher := &IPFSPublisher{
-		node: node,
+	return &IPFSPublisher{
+		node:   node,
+		tracer: t,
 	}
-
-	tracer, shutdownTracing, err := telemetry.InitTracing(context.Background(), "otel-collector:4317")
-
-	publisher.tracer = tracer
-
-	return publisher, shutdownTracing, nil
 }
 
 func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byte) (ResponseCID, error) {

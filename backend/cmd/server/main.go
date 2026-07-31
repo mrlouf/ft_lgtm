@@ -73,23 +73,9 @@ func main() {
 	}
 	defer shutdownMetrics(context.Background())
 
-	sb, shutdownSandbox, err := compiler.NewWazeroSandbox()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer shutdownSandbox(context.Background())
-
-	exe, shutdownExecutor, err := executor.NewWazeroExecutor(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer shutdownExecutor(context.Background())
-
-	p, shutdownPublisher, err := publisher.NewIPFSPublisher("http://ipfs:5001")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer shutdownPublisher(context.Background())
+	sb := compiler.NewWazeroSandbox(tracer)
+	exe := executor.NewWazeroExecutor(context.Background(), tracer)
+	p := publisher.NewIPFSPublisher(tracer, "http://ipfs:5001")
 
 	b := backend.NewBackend(sb, exe, p, tracer, meter)
 

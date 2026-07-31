@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"lgtm/internal/telemetry"
 	"log"
 	"os"
 	"os/exec"
@@ -35,13 +34,14 @@ func WithMemoryLimit(bytes int64) Option {
 	return func(s *WazeroSandbox) { s.memoryLimit = bytes }
 }
 
-func NewWazeroSandbox(opts ...Option) (*WazeroSandbox, func(context.Context) error, error) {
+func NewWazeroSandbox(t trace.Tracer, opts ...Option) *WazeroSandbox {
 	s := &WazeroSandbox{
 		memoryLimit: 64 * 1024 * 1024,
 		timeout:     10 * time.Second,
 		maxStdout:   1024 * 1024,
 		maxStderr:   1024 * 1024,
 		allowedDirs: []string{"/tmp"},
+		tracer:      t,
 	}
 
 	// set options if provided to override defaults
@@ -49,10 +49,7 @@ func NewWazeroSandbox(opts ...Option) (*WazeroSandbox, func(context.Context) err
 		opt(s)
 	}
 
-	tracer, shutdownTracing, err := telemetry.InitTracing(context.Background(), "otel-collector:4317")
-	s.tracer = tracer
-
-	return s, shutdownTracing, err
+	return s
 }
 
 func compileGoToWasm(ctx context.Context, source []byte) ([]byte, error) {
