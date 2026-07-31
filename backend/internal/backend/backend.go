@@ -67,6 +67,7 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "compile")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
 		return "", "", publisher.ResponseCID{}, err
 	}
 
@@ -74,6 +75,7 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "execute")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
@@ -81,6 +83,7 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("error_type", "publish")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
