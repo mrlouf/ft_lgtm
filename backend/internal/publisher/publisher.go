@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"lgtm/internal/telemetry"
 	"log"
 	"net/http"
 
 	"github.com/ipfs/kubo/client/rpc"
 	iface "github.com/ipfs/kubo/core/coreiface"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ResponseCID struct {
@@ -17,32 +19,46 @@ type ResponseCID struct {
 }
 
 type IPFSPublisher struct {
-	node iface.CoreAPI
+	node   iface.CoreAPI
+	tracer trace.Tracer
 }
 
-func NewIPFSPublisher(daemonURL string) (*IPFSPublisher, error) {
+func NewIPFSPublisher(daemonURL string) (*IPFSPublisher, func(context.Context) error, error) {
 	node, err := rpc.NewURLApiWithClient(daemonURL, http.DefaultClient)
 	if err != nil {
-		return nil, fmt.Errorf("ipfs client: %w", err)
+		return nil, nil, fmt.Errorf("ipfs client: %w", err)
 	}
-	return &IPFSPublisher{node: node}, nil
+
+	publisher := &IPFSPublisher{
+		node: node,
+	}
+
+	tracer, shutdownTracing, err := telemetry.InitTracing(context.Background(), "otel-collector:4317")
+
+	publisher.tracer = tracer
+
+	return publisher, shutdownTracing, nil
 }
 
 func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byte) (ResponseCID, error) {
 
 	log.Println("publish: start")
+	ctx, span := i.tracer.Start(ctx, "publisher.publish")
+	defer span.End()
 
 	response := ResponseCID{}
 
 	sourceReader := bytes.NewReader(source)
 	sourceBlock, err := i.node.Block().Put(ctx, sourceReader)
 	if err != nil {
+		span.RecordError(err)
 		return response, fmt.Errorf("ipfs add source: %w", err)
 	}
 
 	outputReader := bytes.NewReader(stdout)
 	outputBlock, err := i.node.Block().Put(ctx, outputReader)
 	if err != nil {
+		span.RecordError(err)
 		return response, fmt.Errorf("ipfs add stdout: %w", err)
 	}
 

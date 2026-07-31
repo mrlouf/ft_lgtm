@@ -29,8 +29,11 @@ type Backend struct {
 	Compiler  Compiler
 	Executor  Executor
 	Publisher Publisher
-	Tracer    trace.Tracer
-	Metrics   *telemetry.ApplicationMetrics
+
+	// TODO: Add Tracer/Metrics/Logger as an Obs struct
+	Tracer  trace.Tracer
+	Metrics *telemetry.ApplicationMetrics
+	// Logger  *log.Logger
 }
 
 func NewBackend(
@@ -86,7 +89,6 @@ func (b *Backend) Run(ctx context.Context, source []byte, language string) (stri
 	log.Println("Run: completed with status:", status.String())
 
 	b.Metrics.SuccessCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", language), attribute.String("status", status.String())))
-
 	b.Metrics.RunDuration.Record(ctx, time.Since(start).Seconds())
 
 	return stdout, stderr, responseCID, nil

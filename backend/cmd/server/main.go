@@ -85,12 +85,11 @@ func main() {
 	}
 	defer shutdownExecutor(context.Background())
 
-	gatewayURL := "http://ipfs:5001"
-	p, err := publisher.NewIPFSPublisher(gatewayURL)
-
+	p, shutdownPublisher, err := publisher.NewIPFSPublisher("http://ipfs:5001")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer shutdownPublisher(context.Background())
 
 	b := backend.NewBackend(sb, exe, p, tracer, meter)
 

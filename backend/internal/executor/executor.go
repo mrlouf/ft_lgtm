@@ -48,6 +48,7 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 		return "", "", fmt.Errorf("compile module: %w", err)
 	}
 	defer compiled.Close(ctx)
+	span.AddEvent("module compiled")
 
 	// Instantiate the module with the configuration
 	// aka run the WebAssembly module
@@ -57,17 +58,15 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 	}
 	if err != nil {
 		var exitErr *sys.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 0 {
-			// proc_exit(0): The program exited successfully,
-			// but we still want to capture stdout and stderr.
-			log.Println("execute: done (clean exit)")
-			return stdoutBuf.String(), stderrBuf.String(), nil
+		if errors.As(err, &exitErr) && exitErr.ExitCode() != 0 {
+			span.RecordError(err)
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("instantiate: %w", err)
 		}
-		span.RecordError(err)
-		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("instantiate: %w", err)
 	}
 
-	log.Println("execute: done")
+	// proc_exit(0): The program exited successfully,
+	// but we still want to capture stdout and stderr.
+	log.Println("execute: done (clean exit)")
+	span.AddEvent("module executed (clean exit)")
 	return stdoutBuf.String(), stderrBuf.String(), nil
-
 }
