@@ -179,12 +179,17 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
 
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
 	span.AddEvent("compile completed", trace.WithAttributes(
 		attribute.String("language", lang),
 		attribute.Int("wasm_binary_size", len(wasmBinary)),
 	))
+
 	log.Println("compile: done")
 
-	return wasmBinary, err
+	return wasmBinary, nil
 
 }
