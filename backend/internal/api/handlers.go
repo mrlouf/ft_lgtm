@@ -59,6 +59,8 @@ func getHTTPStatusFromError(err error) int {
 
 func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string, err error) {
 
+	defer span.End()
+
 	log.Printf("Run failed: %v", err)
 
 	resp := Response{
@@ -75,6 +77,8 @@ func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string,
 }
 
 func returnSuccessResponse(span trace.Span, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
+
+	defer span.End()
 
 	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 
@@ -128,7 +132,6 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
 			attribute.String("language", request.Language),
 		))
-		defer span.End()
 
 		var run backend.RunSpecs = backend.RunSpecs{
 			Language: request.Language,
