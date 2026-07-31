@@ -13,6 +13,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Request struct {
@@ -116,7 +118,9 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 		defer cancel()
 
-		ctx, span := b.Tracer.Start(ctx, "backend.run")
+		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
+			attribute.String("language", request.Language),
+		))
 		defer span.End()
 
 		var run backend.RunSpecs = backend.RunSpecs{
