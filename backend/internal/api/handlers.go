@@ -57,7 +57,7 @@ func getHTTPStatusFromError(err error) int {
 	}
 }
 
-func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
+func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string, err error) {
 
 	log.Printf("Run failed: %v", err)
 
@@ -67,10 +67,14 @@ func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
 		Error:  err.Error(),
 	}
 
+	span.AddEvent("Run failed", trace.WithAttributes(
+		attribute.String("stderr", stderr),
+		attribute.String("error", err.Error()),
+	))
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
+func returnSuccessResponse(span trace.Span, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
 	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 
@@ -81,6 +85,13 @@ func returnSuccessResponse(w http.ResponseWriter, stdout, stderr string, cid pub
 		Stdout:    stdout,
 		Stderr:    stderr,
 	}
+
+	span.AddEvent("Run succeeded", trace.WithAttributes(
+		attribute.String("stdout", stdout),
+		attribute.String("stderr", stderr),
+		attribute.String("source_cid", cid.Source),
+		attribute.String("output_cid", cid.Stdout),
+	))
 
 	json.NewEncoder(w).Encode(resp)
 }
@@ -129,13 +140,9 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 
 		stdout, stderr, responseCID, err := b.Run(run)
 		if err != nil {
-			span.RecordError(err)
-			w.WriteHeader(getHTTPStatusFromError(err))
-			returnFailedResponse(w, stderr, err)
+			returnFailedResponse(span, w, stderr, err)
 		} else {
-			span.AddEvent("Run completed successfully")
-			w.WriteHeader(http.StatusOK)
-			returnSuccessResponse(w, stdout, stderr, responseCID)
+			returnSuccessResponse(span, w, stdout, stderr, responseCID)
 		}
 	}
 }
