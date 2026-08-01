@@ -6,7 +6,7 @@ metadata:
   namespace: lgtm
 
   annotations:
-    checksum/config: {{ .Files.Get "files/prometheus-config.yaml" | sha256sum }}
+    checksum/config: {{ .Files.Get "files/prometheus.yaml" | sha256sum }}
 
 spec:
   replicas: {{ .Values.prometheus.replicaCount }}

@@ -6,7 +6,7 @@ metadata:
   namespace: lgtm
 
   annotations:
-    checksum/config: {{ .Files.Get "files/otel-collector-config.yaml" | sha256sum }}
+    checksum/config: {{ .Files.Get "files/otel-collector.yaml" | sha256sum }}
 
 spec:
   replicas: {{ .Values.otelcollector.replicaCount }}
@@ -24,7 +24,7 @@ spec:
         - name: otel-collector
           image: "{{ .Values.otelcollector.image.repository }}:{{ .Values.otelcollector.image.tag }}@{{ .Values.otelcollector.image.digest }}"
           imagePullPolicy: {{ .Values.otelcollector.image.pullPolicy }}
-          args: ["--config", "/etc/otel/config.yaml"]
+          args: ["--config", "/etc/otel/otel-collector.yaml"]
 
           volumeMounts:
             - name: otel-config

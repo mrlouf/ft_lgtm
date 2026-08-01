@@ -6,7 +6,7 @@ metadata:
   namespace: lgtm
 
   annotations:
-    checksum/config: {{ .Files.Get "files/tempo-config.yaml" | sha256sum }}
+    checksum/config: {{ .Files.Get "files/tempo.yaml" | sha256sum }}
 
 spec:
   replicas: {{ .Values.tempo.replicaCount }}

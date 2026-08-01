@@ -104,3 +104,17 @@ tempo:
     pullPolicy: Always
 
   replicaCount: 1
+
+loki:
+  service:
+    grpc:
+      port: 4320
+    http:
+      port: 3100
+  image:
+    repository: grafana/loki
+    tag: 3.7.4
+    digest: sha256:87f0a067673756a3cede1bcbf0c74875f7df9b09fddb53e399d0c576f756cfcc
+    pullPolicy: Always
+
+  replicaCount: 1

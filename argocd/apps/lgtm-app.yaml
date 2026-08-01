@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mrlouf/ft_lgtm.git
-    targetRevision: refs/heads/k8s/monitoring
+    targetRevision: refs/heads/staging
 
     path: helm/lgtm
 
@@ -60,6 +60,18 @@ spec:
             repository: grafana/tempo
             tag: 2.7.2
             digest: sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
+
+        grafana:
+          image:
+            repository: grafana/grafana
+            tag: nightly-slim
+            digest: sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
+
+        loki:
+          image:
+            repository: grafana/loki
+            tag: 3.7.4
+            digest: sha256:87f0a067673756a3cede1bcbf0c74875f7df9b09fddb53e399d0c576f756cfcc
 
   destination:
     server: https://kubernetes.default.svc

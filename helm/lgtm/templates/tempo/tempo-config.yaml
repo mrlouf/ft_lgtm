@@ -7,4 +7,4 @@ metadata:
 
 data:
   tempo.yaml: |
-{{ .Files.Get "files/tempo-config.yaml" | indent 4 }}
+{{ .Files.Get "files/tempo.yaml" | indent 4 }}
