@@ -13,6 +13,8 @@ services:
       - "4242:4242"
     networks:
       - lgtm
+    depends_on:
+      - otel-collector
 
   frontend:
     build:
@@ -33,6 +35,89 @@ services:
     networks:
       - lgtm
 
+  ipfs:
+    image: ipfs/kubo:v0.42.0@sha256:8907cb0cc1ad5798f6bb1bb1341a800990c268e021cedfa317e8aa1a33864214
+    container_name: lgtm-ipfs
+    working_dir: /files
+    volumes:
+      - ./kubo:/files
+    ports:
+      - "5001:5001"
+      - "8080:8080"
+      - "4001:4001"
+    networks:
+      - lgtm
+
+####################################################################
+##                        LGTM Stack                              ##
+####################################################################
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.158.0-nightly.3484eb0-amd64@sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
+    container_name: lgtm-otel-collector
+    volumes:
+      - ./observability/otel/otel-collector.yaml:/etc/otel-collector.yaml
+    command: ["--config", "/etc/otel-collector.yaml"]
+    ports:
+      - "4317:4317" # gRPC receiver
+      #- "4318:4318" # HTTP receiver for clients that don't support gRPC
+      - "55679:55679" # Debug web UI for 
+      - "8889:8889" # Prometheus metrics endpoint
+    networks:
+      - lgtm
+
+  prometheus:
+    image: prom/prometheus:main-distroless@sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
+    container_name: lgtm-prometheus
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - lgtm
+
+  grafana:
+    image: grafana/grafana:nightly-slim@sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
+    container_name: lgtm-grafana
+    volumes:
+    - ./observability/grafana/provisioning:/etc/grafana/provisioning
+    - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    networks:
+      - lgtm
+
+  tempo:
+    image: grafana/tempo:2.7.2@sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
+    container_name: lgtm-tempo
+    command: "-target=all -config.file=/etc/tempo.yaml"
+    volumes:
+      - ./observability/tempo/tempo.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200" # Tempo HTTP
+      - "4320:4320" # Tempo OTLP GRPC
+    networks:
+      - lgtm
+
+  loki:
+    image: grafana/loki:3.7.4@sha256:87f0a067673756a3cede1bcbf0c74875f7df9b09fddb53e399d0c576f756cfcc
+    container_name: lgtm-loki
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./observability/loki/loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - "9096:9096" # OLTP gRPC
+      - "3100:3100" # HTTP
+    networks:
+      - lgtm
+
 networks:
   lgtm:
     driver: bridge
+
+volumes:
+  tempo-data:

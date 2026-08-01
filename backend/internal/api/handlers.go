@@ -4,10 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"lgtm/internal/backend"
+	"lgtm/internal/publisher"
 	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Request struct {
@@ -16,11 +24,18 @@ type Request struct {
 }
 
 type Response struct {
-	CID    string `json:"cid"`
-	Status string `json:"status"`
-	Stdout string `json:"stdout,omitempty"`
-	Stderr string `json:"stderr,omitempty"`
-	Error  string `json:"error,omitempty"`
+	SourceCID string `json:"source_cid"`
+	OutputCID string `json:"output_cid"`
+	Status    string `json:"status"`
+	Stdout    string `json:"stdout,omitempty"`
+	Stderr    string `json:"stderr,omitempty"`
+	Error     string `json:"error,omitempty"`
+}
+
+type Metrics struct {
+	TotalRequests prometheus.Counter `json:"total_requests"`
+	Successful    prometheus.Counter `json:"successful"`
+	Failed        prometheus.Counter `json:"failed"`
 }
 
 func getHTTPStatusFromError(err error) int {
@@ -43,12 +58,15 @@ func getHTTPStatusFromError(err error) int {
 	}
 }
 
-func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
+func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stderr string, err error) {
 
-	log.Printf("Run failed: %v", err)
+	ctx := context.Background()
+	_, span := tracer.Start(ctx, "backend.returnFailedResponse")
+	defer span.End()
 
-	httpStatus := getHTTPStatusFromError(err)
-	w.WriteHeader(httpStatus)
+	logger.Error("Run failed", slog.Any("error", err))
+
+	w.WriteHeader(getHTTPStatusFromError(err))
 
 	resp := Response{
 		Status: "failed",
@@ -56,22 +74,56 @@ func returnFailedResponse(w http.ResponseWriter, stderr string, err error) {
 		Error:  err.Error(),
 	}
 
+	httpStatus := getHTTPStatusFromError(err)
+	span.AddEvent("Run failed", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
+		attribute.String("stderr", stderr),
+		attribute.String("error", err.Error()),
+	))
+
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(w http.ResponseWriter, stdout, stderr, cid string) {
+func returnSuccessResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
-	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n cid: %s", stdout, stderr, cid)
+	ctx := context.Background()
+	_, span := tracer.Start(ctx, "backend.returnSuccessResponse")
+	defer span.End()
 
-	w.WriteHeader(http.StatusOK)
 	resp := Response{
-		CID:    cid,
-		Status: "completed",
-		Stdout: stdout,
-		Stderr: stderr,
+		SourceCID: cid.Source,
+		OutputCID: cid.Stdout,
+		Status:    "completed",
+		Stdout:    stdout,
+		Stderr:    stderr,
 	}
 
+	httpStatus := http.StatusOK
+	w.WriteHeader(httpStatus)
+	logger.Info("Returning successful response", slog.String("http_status", http.StatusText(httpStatus)), slog.String("source_cid", cid.Source), slog.String("output_cid", cid.Stdout))
+
+	span.AddEvent("Run succeeded", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
+		attribute.String("stdout", stdout),
+		attribute.String("stderr", stderr),
+		attribute.String("source_cid", cid.Source),
+		attribute.String("output_cid", cid.Stdout),
+	))
+
 	json.NewEncoder(w).Encode(resp)
+}
+
+func PrometheusMetricsHandler() http.HandlerFunc {
+
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(w, r)
+	}
 }
 
 func RunHandler(b *backend.Backend) http.HandlerFunc {
@@ -80,24 +132,36 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 
 		var request Request
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			b.Logger.Error("Received invalid HTTP request", slog.Any("HTTPStatus", http.StatusBadRequest), slog.Any("error", err))
 			return
 		}
+
+		b.Logger.Info("Received HTTP request at /api/run", slog.String("language", request.Language), slog.Int("code_length", len(request.Code)))
 
 		w.Header().Set("Content-Type", "application/json")
 
 		ctx := r.Context()
-		ctx, cancel := context.WithTimeout(ctx, 6*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 		defer cancel()
 
-		source := []byte(request.Code)
-		language := request.Language
+		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
+			attribute.String("language", request.Language),
+		))
+		span.SetAttributes(attribute.String("run.status", "started"))
 
-		stdout, stderr, cid, err := b.Run(ctx, source, language)
+		var run backend.RunSpecs = backend.RunSpecs{
+			Language: request.Language,
+			Source:   []byte(request.Code),
+			Start:    time.Now(),
+			Ctx:      ctx,
+			Span:     span,
+		}
+
+		stdout, stderr, responseCID, err := b.Run(run)
 		if err != nil {
-			returnFailedResponse(w, stderr, err)
+			returnFailedResponse(b.Logger, b.Tracer, w, stderr, err)
 		} else {
-			returnSuccessResponse(w, stdout, stderr, cid)
+			returnSuccessResponse(b.Logger, b.Tracer, w, stdout, stderr, responseCID)
 		}
 	}
 }

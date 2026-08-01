@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: tempo
+  namespace: lgtm
+
+  annotations:
+    checksum/config: {{ .Files.Get "files/tempo.yaml" | sha256sum }}
+
+spec:
+  replicas: {{ .Values.tempo.replicaCount }}
+  selector:
+    matchLabels:
+      app: tempo
+
+  template:
+    metadata:
+      labels:
+        app: tempo
+
+    spec:
+      containers:
+        - name: tempo
+          image: "{{ .Values.tempo.image.repository }}:{{ .Values.tempo.image.tag }}@{{ .Values.tempo.image.digest }}"
+          imagePullPolicy: {{ .Values.tempo.image.pullPolicy }}
+          args: ["-target=all", "-config.file=/etc/tempo/tempo.yaml"]
+
+          volumeMounts:
+            - name: tempo-config
+              mountPath: /etc/tempo/tempo.yaml
+              subPath: tempo.yaml
+
+          ports:
+            - name: backend
+              containerPort: {{ .Values.tempo.service.backend.port }}
+            - name: grpc
+              containerPort: {{ .Values.tempo.service.grpc.port }}
+            - name: http
+              containerPort: {{ .Values.tempo.service.http.port }}
+
+      volumes:
+        - name: tempo-config
+          configMap:
+            name: tempo-config

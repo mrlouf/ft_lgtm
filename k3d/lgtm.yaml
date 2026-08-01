@@ -12,7 +12,18 @@ ports:
   - port: 80:80
     nodeFilters:
       - loadbalancer
+
   - port: 8080:8080
+    nodeFilters:
+      - loadbalancer
+
+  - port: 4001:4001           # swarm — public, TCP
+    nodeFilters:
+      - loadbalancer
+  - port: 4001:4001/udp       # swarm — public, QUIC
+    nodeFilters:
+      - loadbalancer
+  - port: 127.0.0.1:5001:5001 # WebUI — local loopback only
     nodeFilters:
       - loadbalancer
 
@@ -20,11 +31,7 @@ options:
   k3d:
     wait: true
     timeout: "60s"
-  k3s:
-    extraArgs: # additional arguments passed to the `k3s server|agent` command; same as `--k3s-arg`
-      - arg: "--tls-san=my.host.domain"
-        nodeFilters:
-          - server:*
+
   kubeconfig:
     updateDefaultKubeconfig: true # add new cluster to your default Kubeconfig; same as `--kubeconfig-update-default` (default: true)
     switchCurrentContext: true # also set current-context to the new cluster's context; same as `--kubeconfig-switch-context` (default: true)

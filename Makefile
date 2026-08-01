@@ -18,11 +18,17 @@ NC			= \033[0m
 CLUSTER_NAME = lgtm
 
 APP_URL		= http://lgtm.local
-IPFS_URL	= http://ipfs.local
-GRAFANA_URL	= http://grafana.local
-ARGOCD_URL	= http://argocd.local
+IPFS_URL	= http://ipfs.lgtm.local
+GRAFANA_URL	= http://grafana.lgtm.local
+ARGOCD_URL	= http://argocd.lgtm.local
+
+
 
 APP_URL_DEV = http://localhost:5173
+APP_IPFS_DEV = http://localhost:5001/webui
+APP_PROMETHEUS_DEV = http://localhost:9090
+APP_GRAFANA_DEV = http://localhost:3000
+APP_OTEL_DEV = http://localhost:55679/debug/servicez
 
 
 # ════════════════════════════════════════════════════════════
@@ -37,18 +43,18 @@ help: ## Show this help message
 all: cluster build deploy ## Setup, build and deploy all services
 
 cluster: ## Install the k3d cluster
-	@printf "\n$(BLUE)Installing $(CLUSTER_NAME) on the host$(NC)\n"
+	@printf "\n$(YELLOW)Installing $(CLUSTER_NAME) on the host$(NC)\n"
 	@echo ''
 	@./scripts/setup-cluster.sh $(CLUSTER_NAME)
 
 build: ## Build the docker images and push them to the GHCR registry
-	@printf "\n$(BLUE)Building docker images$(NC)\n"
+	@printf "\n$(YELLOW)Building docker images$(NC)\n"
 	@echo ''
 	@./scripts/build-images.sh $(CLUSTER_NAME)
 
 
 deploy: ## Deploy all services
-	@printf "\n$(BLUE) Deploying the stack... this may take a moment $(NC)\n\n"
+	@printf "\n$(YELLOW)Deploying the stack... this may take a moment $(NC)\n\n"
 	@./scripts/deploy-stack.sh $(CLUSTER_NAME)
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
@@ -71,7 +77,7 @@ clean: ## Delete cluster
 	@printf "\n$(RED)Are you sure you want to delete the cluster $(CLUSTER_NAME)? This action cannot be undone. (y/n)$(NC)\n"
 	@read answer; \
 	if [ "$$answer" != "$(answer#[Yy])" ] ;then \
-		k3d cluster delete $(CLUSTER_NAME) \
+		k3d cluster delete $(CLUSTER_NAME); \
 	else \
 		echo "Aborting cluster deletion."; \
 	fi
@@ -82,6 +88,11 @@ develop: ## Start the development environment
 	@docker compose -f dev/docker-compose.yaml up --build -d
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access IPFS at $(APP_IPFS_DEV)$(NC)"
+	@echo ""
+	@echo -e "$(BLUE)🌐 Access the OpenTelemetry Collector at $(APP_OTEL_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access Prometheus at $(APP_PROMETHEUS_DEV)$(NC)"
+	@echo -e "$(BLUE)🌐 Access Grafana at $(APP_GRAFANA_DEV)$(NC)"
 	@echo ''
 
 develop-stop: ## Stop the development environment

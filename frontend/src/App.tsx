@@ -9,25 +9,73 @@ import StatusBar from "./components/StatusBar";
 import getSnippet from "./snippets/Snippets";
 
 type Language = "javascript" | "python" | "go";
+type Status = "Ready" | "Running" | "Completed" | "Error";
 
 export default function App() {
-
     const [language, setLanguage] = useState<Language>("go");
     const [code, setCode] = useState(getSnippet("go"));
     const [output, setOutput] = useState("Waiting for execution...");
+    const [status, setStatus] = useState<Status>("Ready");
     const [resetVersion, setResetVersion] = useState(0);
+    const [cid, setCid] = useState("");
+    const [snippetCID, setSnippetCID] = useState("");
+
+function handleStatusChange(nextStatus: Status, nextCid: string) {
+    setStatus(nextStatus);
+
+    if (nextStatus === "Completed") {
+        setSnippetCID(nextCid);
+    } else if (nextStatus === "Running") {
+        setSnippetCID("");
+    } else if (nextStatus === "Error") {
+        setSnippetCID("");
+    }
+}
 
     function handleLanguageChange(nextLanguage: Language) {
         setLanguage(nextLanguage);
         setCode(getSnippet(nextLanguage));
         setOutput("Waiting for execution...");
+        setStatus("Ready");
         setResetVersion((value) => value + 1);
+        setCid("");
+    }
+
+    function handleEnterCID(nextCid: string) {
+        const gatewayUrl = import.meta.env.VITE_IPFS_GATEWAY_URL ?? "http://localhost:8080";
+
+        fetch(`${gatewayUrl}/ipfs/${nextCid}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "text/plain",
+            },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch CID ${nextCid}`);
+                }
+                return response.text();
+            })
+            .then((source) => {
+                setCode(source);
+                setCid(nextCid);
+                setOutput("Loaded source from IPFS");
+                setStatus("Ready");
+                setResetVersion((value) => value + 1);
+            })
+            .catch((error) => {
+                console.error("Error fetching snippet:", error);
+                setOutput(`Error loading CID: ${error.message}`);
+                setStatus("Error");
+            });
     }
 
     function handleReset() {
         setCode(getSnippet(language));
         setOutput("Waiting for execution...");
+        setStatus("Ready");
         setResetVersion((value) => value + 1);
+        setCid("");
     }
 
     return (
@@ -39,21 +87,27 @@ export default function App() {
                         <p className="app-subtitle">do not trust the terminal</p>
                     </div>
                     <ResetButton onReset={handleReset} />
-                    <RunButton code={code} language={language} onResult={setOutput} />
-                </header>
-
-                <div className="app-grid">
-                    <Editor
+                    <RunButton
                         code={code}
                         language={language}
-                        onChange={setCode}
-                        onChangeLanguage={handleLanguageChange}
-                        resetVersion={resetVersion}
+                        onResult={setOutput}
+                        onStatusChange={handleStatusChange}
                     />
-                    <Output output={output} />
-                </div>
+                </header>
 
-                <StatusBar />
+                <Editor
+                    code={code}
+                    language={language}
+                    cid={cid}
+                    onChange={setCode}
+                    onChangeLanguage={handleLanguageChange}
+                    onEnterCID={handleEnterCID}
+                    resetVersion={resetVersion}
+                />
+
+                <Output output={output} />
+
+                <StatusBar status={status} snippetCID={snippetCID} />
             </div>
         </main>
     );

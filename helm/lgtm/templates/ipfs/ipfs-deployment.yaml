@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: ipfs
+  namespace: lgtm
+
+spec:
+  replicas: {{ .Values.ipfs.replicaCount }}
+  selector:
+    matchLabels:
+      app: ipfs
+
+  template:
+    metadata:
+      labels:
+        app: ipfs
+
+    spec:
+      containers:
+        - name: ipfs
+          image: "{{ .Values.ipfs.image.repository }}:{{ .Values.ipfs.image.tag }}"
+          imagePullPolicy: {{ .Values.ipfs.image.pullPolicy }}
+          ports:
+            - name: gateway
+              containerPort: {{ .Values.ipfs.service.gateway.port }}
+            - name: api
+              containerPort: {{ .Values.ipfs.service.api.port }}
+            - name: swarm
+              containerPort: {{ .Values.ipfs.service.swarm.port }}

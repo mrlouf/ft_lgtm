@@ -5,11 +5,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"lgtm/internal/api"
 	"lgtm/internal/backend"
-	"lgtm/internal/ipfs"
-	"lgtm/internal/sandbox"
+	"lgtm/internal/compiler"
+	"lgtm/internal/executor"
+	"lgtm/internal/publisher"
+	"lgtm/internal/telemetry"
 )
 
 // The local cors function is a  middleware that checks the origin of the request
@@ -19,10 +24,9 @@ func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if os.Getenv("ENV") == "production" {
-			// In production, you might want to restrict the allowed origins to your frontend domain.
 			w.Header().Set("Access-Control-Allow-Origin", "http://lgtm.local")
 		} else {
-			// In development, allow requests from localhost:5173 (Vite dev server).
+			// In development, allow requests from any origin for testing purposes.
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
@@ -54,15 +58,48 @@ func newServer(b *backend.Backend) *http.Server {
 
 func main() {
 
-	sb := sandbox.NewWazeroSandbox()
-	exe := sandbox.NewWazeroExecutor(context.Background())
-	ipfs := ipfs.NewIPFSClient()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	b := backend.NewBackend(sb, exe, ipfs)
+	tracer, shutdownTracing, err := telemetry.InitTracing(ctx, "otel-collector:4317")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownTracing(context.Background())
+
+	meter, shutdownMetrics, err := telemetry.InitMetrics(ctx, "otel-collector:4317")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownMetrics(context.Background())
+
+	logger, shutdownLogging, err := telemetry.InitLogging(ctx, "otel-collector:4317")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shutdownLogging(context.Background())
+
+	sb := compiler.NewWazeroSandbox(tracer, logger)
+	exe := executor.NewWazeroExecutor(context.Background(), tracer, logger)
+	p := publisher.NewIPFSPublisher(tracer, logger, "http://ipfs:5001")
+
+	b := backend.NewBackend(sb, exe, p, tracer, meter, logger)
 
 	httpserver := newServer(b)
 
-	log.Println("LGTM Backend server running at http://localhost:4242")
-	log.Fatal(httpserver.ListenAndServe())
+	go func() {
+		log.Printf("LGTM Backend server running at http://localhost:4242")
+		b.Logger.InfoContext(context.Background(), "LGTM Backend server running at http://localhost:4242")
+		log.Fatal(httpserver.ListenAndServe())
+	}()
 
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	b.Logger.InfoContext(context.Background(), "Shutting down server...")
+	if err := httpserver.Shutdown(shutdownCtx); err != nil {
+		b.Logger.ErrorContext(context.Background(), "server shutdown", "error", err)
+	}
 }

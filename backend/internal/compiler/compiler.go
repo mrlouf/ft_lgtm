@@ -1,0 +1,179 @@
+package compiler
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"log"
+	"log/slog"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+
+	"github.com/tetratelabs/wazero"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
+type WazeroSandbox struct {
+	runtime     wazero.Runtime
+	memoryLimit int64
+	timeout     time.Duration
+	maxStdout   int
+	maxStderr   int
+	allowedDirs []string
+	tracer      trace.Tracer
+	logger      *slog.Logger
+}
+
+type Option func(*WazeroSandbox)
+
+func WithTimeout(d time.Duration) Option {
+	return func(s *WazeroSandbox) { s.timeout = d }
+}
+
+func WithMemoryLimit(bytes int64) Option {
+	return func(s *WazeroSandbox) { s.memoryLimit = bytes }
+}
+
+func NewWazeroSandbox(t trace.Tracer, l *slog.Logger, opts ...Option) *WazeroSandbox {
+	s := &WazeroSandbox{
+		memoryLimit: 64 * 1024 * 1024,
+		timeout:     10 * time.Second,
+		maxStdout:   1024 * 1024,
+		maxStderr:   1024 * 1024,
+		allowedDirs: []string{"/tmp"},
+		tracer:      t,
+		logger:      l,
+	}
+
+	// set options if provided to override defaults
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
+}
+
+func compileGoToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.go")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "tinygo", "build", "-o", outPath, "-target=wasi", srcPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	return os.ReadFile(outPath)
+}
+
+func compileJSToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.js")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "javy", "build", srcPath, "-o", outPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	return os.ReadFile(outPath)
+}
+
+func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.py")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "py2wasm", srcPath, "-o", outPath)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	// * DEBUG
+	log.Printf("compile: done, wasm binary at %s", outPath)
+	log.Printf("compile: binary size: %d bytes", func() int64 {
+		info, err := os.Stat(outPath)
+		if err != nil {
+			return 0
+		}
+		return info.Size()
+	}())
+
+	return os.ReadFile(outPath)
+}
+
+func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
+
+	s.logger.InfoContext(ctx, "compile: start", "language", lang, "source_length", len(source))
+	ctx, span := s.tracer.Start(ctx, "compiler.compile")
+	defer span.End()
+
+	var wasmBinary []byte
+	var err error
+
+	switch lang {
+	case "golang", "go":
+		wasmBinary, err = compileGoToWasm(ctx, source)
+	case "javascript", "js":
+		wasmBinary, err = compileJSToWasm(ctx, source)
+	case "python", "py":
+		wasmBinary, err = compilePythonToWasm(ctx, source)
+	default:
+		s.logger.ErrorContext(ctx, "compile: unsupported language", "language", lang)
+		span.RecordError(fmt.Errorf("unsupported language: %s", lang))
+		return nil, fmt.Errorf("unsupported language: %s", lang)
+	}
+	if err != nil {
+		s.logger.ErrorContext(ctx, "compile: failed", "language", lang, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	s.logger.InfoContext(ctx, "compile: done", "language", lang, "wasm_binary_size", len(wasmBinary))
+	span.AddEvent("compile completed", trace.WithAttributes(
+		attribute.String("language", lang),
+		attribute.Int("wasm_binary_size", len(wasmBinary)),
+	))
+
+	return wasmBinary, nil
+
+}

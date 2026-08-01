@@ -1,11 +1,18 @@
 ingress:
   enabled: true
   className: traefik
-  host: lgtm.local
-  http:
-    paths:
-    unsecure: true
 
+  frontend:
+    host: lgtm.local
+    http:
+      paths:
+      unsecure: yes
+  
+  ipfs:
+    host: ipfs.lgtm.local
+    http:
+      paths:
+      unsecure: yes
 
 frontend:
   service:
@@ -23,6 +30,91 @@ backend:
   image:
     repository: lgtm_back
     tag: latest
+    pullPolicy: Always
+
+  replicaCount: 1
+
+ipfs:
+  service:
+    gateway:
+      port: 8080
+    api:
+      port: 5001
+    swarm:
+      port: 4001
+
+  image:
+    repository: ipfs/kubo
+    tag: v0.42.0
+    pullPolicy: Always
+
+  replicaCount: 1
+
+# Helm does not allow hyphens in keys, so I remove it here for the values template.
+otelcollector:
+  service:
+    grpc:
+      port: 4317
+    webui:
+      port: 55679
+    prometheus:
+      port: 8889
+  image:
+    repository: otel/opentelemetry-collector
+    tag: 0.158.0-nightly.3484eb0-amd64
+    digest: sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
+    pullPolicy: Always
+
+  replicaCount: 1
+
+prometheus:
+  service:
+    port: 9090
+  image:
+    repository: prom/prometheus
+    tag: main-distroless
+    digest: sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
+    pullPolicy: Always
+
+  replicaCount: 1
+
+grafana:
+  service:
+    port: 3000
+  image:
+    repository: grafana/grafana
+    tag: nightly-slim
+    digest: sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
+    pullPolicy: Always
+
+  replicaCount: 1
+
+tempo:
+  service:
+    grpc:
+      port: 4317
+    http:
+      port: 4318
+    backend:
+      port: 3200
+  image:
+    repository: grafana/tempo
+    tag: 2.7.2
+    digest: sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
+    pullPolicy: Always
+
+  replicaCount: 1
+
+loki:
+  service:
+    grpc:
+      port: 4320
+    http:
+      port: 3100
+  image:
+    repository: grafana/loki
+    tag: 3.7.4
+    digest: sha256:87f0a067673756a3cede1bcbf0c74875f7df9b09fddb53e399d0c576f756cfcc
     pullPolicy: Always
 
   replicaCount: 1

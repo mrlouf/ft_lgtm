@@ -9,7 +9,9 @@ const pythonSnippet = `def hello():
 
 const javascriptSnippet = `function hello() {
     console.log("Hello, world!")
-}`;
+}
+    
+hello();`;
 
 export default function getSnippet(name: string): string {
 

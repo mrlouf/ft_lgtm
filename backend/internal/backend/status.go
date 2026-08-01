@@ -46,9 +46,11 @@ func (s RunStatus) String() string {
 	}
 }
 
-func ClassifyError(err error) RunStatus {
+func classifyStatus(err error) RunStatus {
+
 	var compileErr *CompileError
 	var executeErr *ExecuteError
+
 	switch {
 	case err == nil:
 		return StatusSuccess
