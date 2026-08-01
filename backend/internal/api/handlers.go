@@ -6,6 +6,7 @@ import (
 	"lgtm/internal/backend"
 	"lgtm/internal/publisher"
 	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -57,11 +58,13 @@ func getHTTPStatusFromError(err error) int {
 	}
 }
 
-func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string, err error) {
+func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stderr string, err error) {
 
+	ctx := context.Background()
+	_, span := tracer.Start(ctx, "backend.returnFailedResponse")
 	defer span.End()
 
-	log.Printf("Run failed: %v", err)
+	logger.Error("Run failed", slog.Any("error", err))
 
 	w.WriteHeader(getHTTPStatusFromError(err))
 
@@ -81,11 +84,11 @@ func returnFailedResponse(span trace.Span, w http.ResponseWriter, stderr string,
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(span trace.Span, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
+func returnSuccessResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
+	ctx := context.Background()
+	_, span := tracer.Start(ctx, "backend.returnSuccessResponse")
 	defer span.End()
-
-	log.Printf("Run succeeded:\n stdout: %s\n stderr: %s\n source cid: %s\n output cid: %s", stdout, stderr, cid.Source, cid.Stdout)
 
 	resp := Response{
 		SourceCID: cid.Source,
@@ -97,6 +100,7 @@ func returnSuccessResponse(span trace.Span, w http.ResponseWriter, stdout, stder
 
 	httpStatus := http.StatusOK
 	w.WriteHeader(httpStatus)
+	logger.Info("Returning successful response", slog.String("http_status", http.StatusText(httpStatus)), slog.String("source_cid", cid.Source), slog.String("output_cid", cid.Stdout))
 
 	span.AddEvent("Run succeeded", trace.WithAttributes(
 		attribute.String("http_status", http.StatusText(httpStatus)),
@@ -128,9 +132,11 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 
 		var request Request
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			b.Logger.Error("Received invalid HTTP request", slog.Any("HTTPStatus", http.StatusBadRequest), slog.Any("error", err))
 			return
 		}
+
+		b.Logger.Info("Received HTTP request at /api/run", slog.String("language", request.Language), slog.Int("code_length", len(request.Code)))
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -141,6 +147,7 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
 			attribute.String("language", request.Language),
 		))
+		span.SetAttributes(attribute.String("run.status", "started"))
 
 		var run backend.RunSpecs = backend.RunSpecs{
 			Language: request.Language,
@@ -152,9 +159,9 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 
 		stdout, stderr, responseCID, err := b.Run(run)
 		if err != nil {
-			returnFailedResponse(span, w, stderr, err)
+			returnFailedResponse(b.Logger, b.Tracer, w, stderr, err)
 		} else {
-			returnSuccessResponse(span, w, stdout, stderr, responseCID)
+			returnSuccessResponse(b.Logger, b.Tracer, w, stdout, stderr, responseCID)
 		}
 	}
 }
