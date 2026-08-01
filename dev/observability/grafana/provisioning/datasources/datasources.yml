@@ -14,3 +14,9 @@ datasources:
     url: http://tempo:3200
     uid: tempo
     nodeGraph: true
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:9096
+    uid: loki

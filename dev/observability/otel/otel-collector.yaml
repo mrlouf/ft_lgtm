@@ -10,8 +10,13 @@ exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
 
-  tempo:
-    endpoint: tempo:4317
+  otlp/tempo:
+    endpoint: tempo:4320
+    tls:
+      insecure: true
+
+  otlp/loki:
+    endpoint: loki:9096/otlp
     tls:
       insecure: true
 
@@ -28,8 +33,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, tempo]
+      exporters: [debug, otlp/tempo]
     metrics:
       receivers: [otlp]
       processors: [batch]
       exporters: [debug, prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp/loki]

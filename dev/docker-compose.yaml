@@ -56,14 +56,13 @@ services:
     image: otel/opentelemetry-collector:0.158.0-nightly.3484eb0-amd64@sha256:8b2768e2187144d44fc6e86ee7b8e03041df4dfa2a9b476f1172783e1a785d3f
     container_name: lgtm-otel-collector
     volumes:
-      - ./observability/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    command: ["--config", "/etc/otel-collector-config.yaml"]
+      - ./observability/otel/otel-collector.yaml:/etc/otel-collector.yaml
+    command: ["--config", "/etc/otel-collector.yaml"]
     ports:
       - "4317:4317" # gRPC receiver
       #- "4318:4318" # HTTP receiver for clients that don't support gRPC
       - "55679:55679" # Debug web UI for 
       - "8889:8889" # Prometheus metrics endpoint
-      - "4320:4320" # Tempo query frontend
     networks:
       - lgtm
 
@@ -92,18 +91,27 @@ services:
       - lgtm
 
   tempo:
-    image: grafana/tempo:main-df7893f-1993-1@sha256:2ccd769a02a6d1602e9096e444aeb493c574e0e96d5decd80d36b286bc670ad2
+    image: grafana/tempo:2.7.2@sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
     container_name: lgtm-tempo
     command: "-target=all -config.file=/etc/tempo.yaml"
     volumes:
       - ./observability/tempo/tempo.yaml:/etc/tempo.yaml
       - tempo-data:/var/tempo
     ports:
-      - "3200:3200" # tempo
-      #- "4317:4317" # Tempo OTLP GRPC
+      - "4320:4320" # Tempo OTLP GRPC
       #- "4318:4318" # Tempo OTLP HTTP
-    environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4320
+    networks:
+      - lgtm
+
+  loki:
+    image: grafana/loki:3.7.4@sha256:87f0a067673756a3cede1bcbf0c74875f7df9b09fddb53e399d0c576f756cfcc
+    container_name: lgtm-loki
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./observability/loki/loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - "9096:9096" # gRPC
+      #- "3100:3100" # HTTP
     networks:
       - lgtm
 
