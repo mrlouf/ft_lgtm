@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
@@ -16,21 +16,23 @@ import (
 type WazeroExecutor struct {
 	runtime wazero.Runtime
 	tracer  trace.Tracer
+	logger  *slog.Logger
 }
 
-func NewWazeroExecutor(ctx context.Context, t trace.Tracer) *WazeroExecutor {
+func NewWazeroExecutor(ctx context.Context, t trace.Tracer, l *slog.Logger) *WazeroExecutor {
 	r := wazero.NewRuntime(ctx)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
 	return &WazeroExecutor{
 		runtime: r,
 		tracer:  t,
+		logger:  l,
 	}
 }
 
 func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout, stderr string, err error) {
 
-	log.Println("execute: start")
+	e.logger.InfoContext(ctx, "execute: start")
 	ctx, span := e.tracer.Start(ctx, "executor.execute")
 	defer span.End()
 
@@ -43,9 +45,13 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 	// Compile the WebAssembly module from the raw bytes
 	compiled, err := e.runtime.CompileModule(ctx, wasmBytes)
 	if err != nil {
+		e.logger.ErrorContext(ctx, "execute: error compiling module", "error", err)
+		span.RecordError(err)
 		return "", "", fmt.Errorf("compile module: %w", err)
 	}
 	defer compiled.Close(ctx)
+
+	e.logger.InfoContext(ctx, "execute: module compiled")
 	span.AddEvent("module compiled")
 
 	// Instantiate the module with the configuration
@@ -60,17 +66,18 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 
 			// proc_exit(0): The program exited successfully,
 			// but we still want to capture stdout and stderr.
-			log.Println("execute: done (clean exit)")
+			e.logger.InfoContext(ctx, "execute: done (clean exit)")
 			span.AddEvent("module executed (clean exit)")
 			return stdoutBuf.String(), stderrBuf.String(), nil
 		}
+		e.logger.ErrorContext(ctx, "execute: error instantiating module", "error", err)
 		span.RecordError(err)
 		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("instantiate: %w", err)
 	}
 
 	// proc_exit(0): The program exited successfully,
 	// but we still want to capture stdout and stderr.
-	log.Println("execute: done (clean exit)")
+	e.logger.InfoContext(ctx, "execute: done (clean exit)")
 	span.AddEvent("module executed (clean exit)")
 	return stdoutBuf.String(), stderrBuf.String(), nil
 }

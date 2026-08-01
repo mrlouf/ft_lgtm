@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/ipfs/kubo/client/rpc"
 	iface "github.com/ipfs/kubo/core/coreiface"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -20,9 +21,10 @@ type ResponseCID struct {
 type IPFSPublisher struct {
 	node   iface.CoreAPI
 	tracer trace.Tracer
+	logger *slog.Logger
 }
 
-func NewIPFSPublisher(t trace.Tracer, daemonURL string) *IPFSPublisher {
+func NewIPFSPublisher(t trace.Tracer, l *slog.Logger, daemonURL string) *IPFSPublisher {
 	node, err := rpc.NewURLApiWithClient(daemonURL, http.DefaultClient)
 	if err != nil {
 		return nil
@@ -31,12 +33,13 @@ func NewIPFSPublisher(t trace.Tracer, daemonURL string) *IPFSPublisher {
 	return &IPFSPublisher{
 		node:   node,
 		tracer: t,
+		logger: l,
 	}
 }
 
 func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byte) (ResponseCID, error) {
 
-	log.Println("publish: start")
+	i.logger.InfoContext(ctx, "publish: start")
 	ctx, span := i.tracer.Start(ctx, "publisher.publish")
 	defer span.End()
 
@@ -46,6 +49,7 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	sourceBlock, err := i.node.Block().Put(ctx, sourceReader)
 	if err != nil {
 		span.RecordError(err)
+		i.logger.ErrorContext(ctx, "publish: error adding source block", "error", err)
 		return response, fmt.Errorf("ipfs add source: %w", err)
 	}
 
@@ -53,9 +57,9 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	outputBlock, err := i.node.Block().Put(ctx, outputReader)
 	if err != nil {
 		span.RecordError(err)
+		i.logger.ErrorContext(ctx, "publish: error adding stdout block", "error", err)
 		return response, fmt.Errorf("ipfs add stdout: %w", err)
 	}
-	span.AddEvent("blocks published")
 
 	response.Source = sourceBlock.Path().String()
 	response.Stdout = outputBlock.Path().String()
@@ -63,10 +67,13 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	response.Source = response.Source[6:] // Remove the "/ipfs/" prefix
 	response.Stdout = response.Stdout[6:]
 
-	log.Println("publish: block published:", response.Source)
-	log.Println("publish: block published:", response.Stdout)
+	span.AddEvent("blocks published", trace.WithAttributes(
+		attribute.String("source_cid", response.Source),
+		attribute.String("stdout_cid", response.Stdout),
+	))
 
-	log.Println("publish: done")
+	i.logger.InfoContext(ctx, "publish: block published", "source", response.Source, "stdout", response.Stdout)
+	i.logger.InfoContext(ctx, "publish: done")
 
 	return response, nil
 

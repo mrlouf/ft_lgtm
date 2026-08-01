@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"log"
+	"log/slog"
 	"time"
 
 	"lgtm/internal/publisher"
@@ -33,15 +34,19 @@ type Backend struct {
 	// TODO: Add Tracer/Metrics/Logger as an Obs struct
 	Tracer  trace.Tracer
 	Metrics *telemetry.ApplicationMetrics
-	// Logger  *log.Logger
+	Logger  *slog.Logger
 }
 
 func NewBackend(
+
 	compiler Compiler,
 	executor Executor,
 	publisher Publisher,
 	tracer trace.Tracer,
-	meter metric.Meter) *Backend {
+	meter metric.Meter,
+	logger *slog.Logger,
+
+) *Backend {
 
 	metrics := telemetry.NewApplicationMetrics(meter)
 
@@ -51,6 +56,7 @@ func NewBackend(
 		Publisher: publisher,
 		Tracer:    tracer,
 		Metrics:   metrics,
+		Logger:    logger,
 	}
 }
 

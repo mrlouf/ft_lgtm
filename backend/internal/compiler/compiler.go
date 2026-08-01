@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +24,7 @@ type WazeroSandbox struct {
 	maxStderr   int
 	allowedDirs []string
 	tracer      trace.Tracer
+	logger      *slog.Logger
 }
 
 type Option func(*WazeroSandbox)
@@ -35,7 +37,7 @@ func WithMemoryLimit(bytes int64) Option {
 	return func(s *WazeroSandbox) { s.memoryLimit = bytes }
 }
 
-func NewWazeroSandbox(t trace.Tracer, opts ...Option) *WazeroSandbox {
+func NewWazeroSandbox(t trace.Tracer, l *slog.Logger, opts ...Option) *WazeroSandbox {
 	s := &WazeroSandbox{
 		memoryLimit: 64 * 1024 * 1024,
 		timeout:     10 * time.Second,
@@ -43,6 +45,7 @@ func NewWazeroSandbox(t trace.Tracer, opts ...Option) *WazeroSandbox {
 		maxStderr:   1024 * 1024,
 		allowedDirs: []string{"/tmp"},
 		tracer:      t,
+		logger:      l,
 	}
 
 	// set options if provided to override defaults

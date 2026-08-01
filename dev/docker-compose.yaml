@@ -98,8 +98,8 @@ services:
       - ./observability/tempo/tempo.yaml:/etc/tempo.yaml
       - tempo-data:/var/tempo
     ports:
+      - "3200:3200" # Tempo HTTP
       - "4320:4320" # Tempo OTLP GRPC
-      #- "4318:4318" # Tempo OTLP HTTP
     networks:
       - lgtm
 
@@ -110,8 +110,8 @@ services:
     volumes:
       - ./observability/loki/loki.yaml:/etc/loki/loki.yaml
     ports:
-      - "9096:9096" # gRPC
-      #- "3100:3100" # HTTP
+      - "9096:9096" # OLTP gRPC
+      - "3100:3100" # HTTP
     networks:
       - lgtm
 
