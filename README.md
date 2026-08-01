@@ -102,7 +102,7 @@ The monitoring and observability stack consists of the following applications ru
 A Makefile is at the root of the repo and offers multiple commands to guide on how to deploy this project:
 
 ```terminal
-nicolas@pop-os:~/$ makenicolas@pop-os:~/Desktop/42/ft_lgtm (staging *)$ make
+nicolas@pop-os:~/$ make
 Usage: make [target]
 
 Available targets:
