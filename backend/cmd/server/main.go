@@ -73,22 +73,23 @@ func main() {
 	}
 	defer shutdownMetrics(context.Background())
 
-	sb := compiler.NewWazeroSandbox()
-	exe := executor.NewWazeroExecutor(context.Background())
-
-	gatewayURL := "http://ipfs:5001"
-	p, err := publisher.NewIPFSPublisher(gatewayURL)
-
+	logger, shutdownLogging, err := telemetry.InitLogging(ctx, "otel-collector:4317")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer shutdownLogging(context.Background())
 
-	b := backend.NewBackend(sb, exe, p, tracer, meter)
+	sb := compiler.NewWazeroSandbox(tracer, logger)
+	exe := executor.NewWazeroExecutor(context.Background(), tracer, logger)
+	p := publisher.NewIPFSPublisher(tracer, logger, "http://ipfs:5001")
+
+	b := backend.NewBackend(sb, exe, p, tracer, meter, logger)
 
 	httpserver := newServer(b)
 
 	go func() {
-		log.Println("LGTM Backend server running at http://localhost:4242")
+		log.Printf("LGTM Backend server running at http://localhost:4242")
+		b.Logger.InfoContext(context.Background(), "LGTM Backend server running at http://localhost:4242")
 		log.Fatal(httpserver.ListenAndServe())
 	}()
 
@@ -97,8 +98,8 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	log.Println("Shutting down server...")
+	b.Logger.InfoContext(context.Background(), "Shutting down server...")
 	if err := httpserver.Shutdown(shutdownCtx); err != nil {
-		log.Printf("server shutdown: %v", err)
+		b.Logger.ErrorContext(context.Background(), "server shutdown", "error", err)
 	}
 }

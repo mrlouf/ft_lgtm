@@ -55,6 +55,12 @@ spec:
             tag: main-distroless
             digest: sha256:0422496748612c360ad4f6c528a486f72c0e78e5fb430b0c5ffe7a9a2a51f21d
 
+        tempo:
+          image:
+            repository: grafana/tempo
+            tag: 2.7.2
+            digest: sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
+
   destination:
     server: https://kubernetes.default.svc
     namespace: lgtm

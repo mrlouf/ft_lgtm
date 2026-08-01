@@ -5,12 +5,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
 
 	"github.com/tetratelabs/wazero"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WazeroSandbox struct {
@@ -20,6 +23,8 @@ type WazeroSandbox struct {
 	maxStdout   int
 	maxStderr   int
 	allowedDirs []string
+	tracer      trace.Tracer
+	logger      *slog.Logger
 }
 
 type Option func(*WazeroSandbox)
@@ -32,14 +37,15 @@ func WithMemoryLimit(bytes int64) Option {
 	return func(s *WazeroSandbox) { s.memoryLimit = bytes }
 }
 
-func NewWazeroSandbox(opts ...Option) *WazeroSandbox {
-
+func NewWazeroSandbox(t trace.Tracer, l *slog.Logger, opts ...Option) *WazeroSandbox {
 	s := &WazeroSandbox{
 		memoryLimit: 64 * 1024 * 1024,
 		timeout:     10 * time.Second,
 		maxStdout:   1024 * 1024,
 		maxStderr:   1024 * 1024,
 		allowedDirs: []string{"/tmp"},
+		tracer:      t,
+		logger:      l,
 	}
 
 	// set options if provided to override defaults
@@ -158,6 +164,8 @@ func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
 
 	log.Println("compile: start")
+	ctx, span := s.tracer.Start(ctx, "compiler.compile")
+	defer span.End()
 
 	var wasmBinary []byte
 	var err error
@@ -170,11 +178,21 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 	case "python", "py":
 		wasmBinary, err = compilePythonToWasm(ctx, source)
 	default:
+		span.RecordError(fmt.Errorf("unsupported language: %s", lang))
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
 
+	if err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+	span.AddEvent("compile completed", trace.WithAttributes(
+		attribute.String("language", lang),
+		attribute.Int("wasm_binary_size", len(wasmBinary)),
+	))
+
 	log.Println("compile: done")
 
-	return wasmBinary, err
+	return wasmBinary, nil
 
 }

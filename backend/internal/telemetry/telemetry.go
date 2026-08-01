@@ -3,12 +3,18 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -87,10 +93,45 @@ func InitTracing(ctx context.Context, collectorEndpoint string) (trace.Tracer, f
 		return nil, nil, err
 	}
 
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName("lgtm:backend"),
+		),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
 	)
 
 	tracer := tp.Tracer("lgtm/backend")
 	return tracer, tp.Shutdown, nil
+}
+
+func InitLogging(ctx context.Context, collectorEndpoint string) (*slog.Logger, func(context.Context) error, error) {
+	exporter, err := otlploggrpc.New(ctx, otlploggrpc.WithEndpoint(collectorEndpoint), otlploggrpc.WithInsecure())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName("lgtm:backend"),
+		),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	lp := sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(exporter)),
+		sdklog.WithResource(res),
+	)
+
+	handler := otelslog.NewHandler("lgtm/backend", otelslog.WithLoggerProvider(lp))
+	logger := slog.New(handler)
+	return logger, lp.Shutdown, nil
 }

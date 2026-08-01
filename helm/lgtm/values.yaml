@@ -85,3 +85,22 @@ grafana:
     repository: grafana/grafana
     tag: nightly-slim
     digest: sha256:5909f8f4123b9ff3efcd701e23c0b5310b6ae0ea12fd3ee906f2bc91831e5363
+    pullPolicy: Always
+
+  replicaCount: 1
+
+tempo:
+  service:
+    grpc:
+      port: 4317
+    http:
+      port: 4318
+    backend:
+      port: 3200
+  image:
+    repository: grafana/tempo
+    tag: 2.7.2
+    digest: sha256:4b0277a9b572a4b1fa43b01468e58911ec214dd69d033f2cd476596d14de9fe3
+    pullPolicy: Always
+
+  replicaCount: 1
