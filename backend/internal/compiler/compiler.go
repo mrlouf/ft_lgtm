@@ -78,16 +78,6 @@ func compileGoToWasm(ctx context.Context, source []byte) ([]byte, error) {
 		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
 	}
 
-	// * DEBUG
-	log.Printf("compile: done, wasm binary at %s", outPath)
-	log.Printf("compile: binary size: %d bytes", func() int64 {
-		info, err := os.Stat(outPath)
-		if err != nil {
-			return 0
-		}
-		return info.Size()
-	}())
-
 	return os.ReadFile(outPath)
 }
 
@@ -112,16 +102,6 @@ func compileJSToWasm(ctx context.Context, source []byte) ([]byte, error) {
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
 	}
-
-	// * DEBUG
-	log.Printf("compile: done, wasm binary at %s", outPath)
-	log.Printf("compile: binary size: %d bytes", func() int64 {
-		info, err := os.Stat(outPath)
-		if err != nil {
-			return 0
-		}
-		return info.Size()
-	}())
 
 	return os.ReadFile(outPath)
 }
@@ -163,7 +143,7 @@ func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
 
 func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
 
-	log.Println("compile: start")
+	s.logger.InfoContext(ctx, "compile: start", "language", lang, "source_length", len(source))
 	ctx, span := s.tracer.Start(ctx, "compiler.compile")
 	defer span.End()
 
@@ -178,20 +158,21 @@ func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string)
 	case "python", "py":
 		wasmBinary, err = compilePythonToWasm(ctx, source)
 	default:
+		s.logger.ErrorContext(ctx, "compile: unsupported language", "language", lang)
 		span.RecordError(fmt.Errorf("unsupported language: %s", lang))
 		return nil, fmt.Errorf("unsupported language: %s", lang)
 	}
-
 	if err != nil {
+		s.logger.ErrorContext(ctx, "compile: failed", "language", lang, "error", err)
 		span.RecordError(err)
 		return nil, err
 	}
+
+	s.logger.InfoContext(ctx, "compile: done", "language", lang, "wasm_binary_size", len(wasmBinary))
 	span.AddEvent("compile completed", trace.WithAttributes(
 		attribute.String("language", lang),
 		attribute.Int("wasm_binary_size", len(wasmBinary)),
 	))
-
-	log.Println("compile: done")
 
 	return wasmBinary, nil
 
