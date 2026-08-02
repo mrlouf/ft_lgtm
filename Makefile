@@ -40,7 +40,7 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-all: cluster build deploy ## Setup, build and deploy all services
+all: cluster deploy ## Setup, build and deploy all services
 
 cluster: ## Install the k3d cluster
 	@printf "\n$(YELLOW)Installing $(CLUSTER_NAME) on the host$(NC)\n"
@@ -56,6 +56,7 @@ build: ## Build the docker images and push them to the GHCR registry
 deploy: ## Deploy all services
 	@printf "\n$(YELLOW)Deploying the stack... this may take a moment $(NC)\n\n"
 	@./scripts/deploy-stack.sh $(CLUSTER_NAME)
+	@./scripts/append-hosts.sh $(CLUSTER_NAME)
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
 	@echo -e "$(BLUE)🌐 Access IPFS at $(IPFS_URL)$(NC)"
