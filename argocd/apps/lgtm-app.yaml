@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/mrlouf/ft_lgtm.git
-    targetRevision: refs/heads/staging
+    targetRevision: refs/heads/main
 
     path: helm/lgtm
 

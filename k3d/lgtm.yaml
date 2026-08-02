@@ -13,14 +13,14 @@ ports:
     nodeFilters:
       - loadbalancer
 
-  - port: 8080:8080
+  - port: 3000:3000           # Grafana — public
     nodeFilters:
       - loadbalancer
 
-  - port: 4001:4001           # swarm — public, TCP
+  - port: 4001:4001           # swarm — public
     nodeFilters:
       - loadbalancer
-  - port: 4001:4001/udp       # swarm — public, QUIC
+  - port: 4001:4001/udp       # swarm — public
     nodeFilters:
       - loadbalancer
   - port: 127.0.0.1:5001:5001 # WebUI — local loopback only

@@ -29,3 +29,14 @@ spec:
                 name: ipfs
                 port:
                   number: {{ .Values.ipfs.service.gateway.port }}
+
+    - host: {{ .Values.ingress.grafana.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: {{ .Values.grafana.service.port }}
