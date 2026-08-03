@@ -108,9 +108,11 @@ Usage: make [target]
 Available targets:
   help            Show this help message
   all             Setup, build and deploy all services
-  cluster         Install the k3d cluster
-  build           Build the docker images and push them to the GHCR registry
-  deploy          Deploy all services
+  cluster         Install the k3d cluster and Helm on the host
+  build           Build the docker images and push them to the GHCR registry (requires permission)
+  deploy          Deploy the system using the selected deployment method (Helm or ArgoCD)
+  deploy-helm     Deploy the system using Helm
+  deploy-argocd   Deploy the system using ArgoCD
   stop            Stop cluster
   start           Start the cluster
   clean           Delete cluster
