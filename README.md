@@ -120,6 +120,8 @@ Available targets:
   develop-stop    Stop the development environment
 ```
 
+The `make all` command will successively create the Kubernetes cluster, install Helm and ArgoCD, 
+
 ## Resources
 
 ### References

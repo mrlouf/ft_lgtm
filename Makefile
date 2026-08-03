@@ -31,6 +31,8 @@ APP_GRAFANA_DEV = http://localhost:3000
 APP_OTEL_DEV = http://localhost:55679/debug/servicez
 
 
+DEPLOYMENT_MODE ?= helm
+
 # ════════════════════════════════════════════════════════════
 
 
@@ -42,20 +44,43 @@ help: ## Show this help message
 
 all: cluster deploy ## Setup, build and deploy all services
 
-cluster: ## Install the k3d cluster
+cluster: ## Install the k3d cluster and Helm on the host
 	@printf "\n$(YELLOW)Installing $(CLUSTER_NAME) on the host$(NC)\n"
 	@echo ''
 	@./scripts/setup-cluster.sh $(CLUSTER_NAME)
 
-build: ## Build the docker images and push them to the GHCR registry
+build: ## Build the docker images and push them to the GHCR registry (requires permission)
 	@printf "\n$(YELLOW)Building docker images$(NC)\n"
 	@echo ''
 	@./scripts/build-images.sh $(CLUSTER_NAME)
 
+deploy: ## Deploy the system using the selected deployment method (Helm or ArgoCD)
+	@printf "\n$(YELLOW)Choose deployment method (h/a):$(NC)\n"; \
+	read answer; \
+	if [ "$$answer" = "h" ]; then \
+		$(MAKE) deploy-helm; \
+	elif [ "$$answer" = "a" ]; then \
+		$(MAKE) deploy-argocd; \
+	else \
+		echo "Invalid option"; \
+		exit 1; \
+	fi
 
-deploy: ## Deploy all services
-	@printf "\n$(YELLOW)Deploying the stack... this may take a moment $(NC)\n\n"
-	@./scripts/deploy-stack.sh $(CLUSTER_NAME)
+deploy-helm: cluster ## Deploy the system using Helm
+	@printf "\n$(YELLOW)Deploying the system using Helm$(NC)\n"
+	@echo ''
+	@./scripts/deploy-helm.sh $(CLUSTER_NAME)
+	@./scripts/append-hosts.sh $(CLUSTER_NAME)
+	@echo ''
+	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
+	@echo -e "$(BLUE)🌐 Access IPFS at $(IPFS_URL)$(NC)"
+	@echo -e "$(BLUE)🌐 Access Grafana at $(GRAFANA_URL)$(NC)"
+	@echo ""
+
+deploy-argocd: cluster ## Deploy the system using ArgoCD
+	@printf "\n$(YELLOW)Deploying the system using ArgoCD$(NC)\n"
+	@echo ''
+	@./scripts/deploy-argocd.sh $(CLUSTER_NAME)
 	@./scripts/append-hosts.sh $(CLUSTER_NAME)
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
@@ -101,4 +126,9 @@ develop-stop: ## Stop the development environment
 	@echo ''
 	@docker compose -f dev/docker-compose.yaml down
 
-PHONY: help all cluster build start deploy stop clean develop develop-stop
+k9s: ## Install k9s, a TUI tool to manage k8s clusters
+	@printf "\n$(YELLOW)Checking k9s installation...$(NC)\n"
+	@echo ''
+	@./scripts/install-k9s.sh
+
+PHONY: help all cluster build start deploy stop clean develop develop-stop k9s

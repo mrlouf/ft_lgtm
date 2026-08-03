@@ -30,8 +30,8 @@ else
     --create-namespace \
     --values argocd/values.yaml 1>/dev/null
 
-    # Add the optional ArgoCD Image Updater
-    helm install argocd-image-updater argo/argocd-image-updater --namespace argocd
+    # ArgoCD Image Updater (not really needed for this case) 
+    # helm install argocd-image-updater argo/argocd-image-updater --namespace argocd
 
     kubectl wait --namespace argocd --for=condition=available deployment/argocd-server --timeout=120s
 
@@ -45,8 +45,4 @@ echo -e "${YELLOW}Initial admin password: ${ARGOCD_PASSWORD}${NC}"
 #               Deploy the app via ArgoCD          #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 
-# TODO: Add the future observability stack:
-# # - Prometheus
-# # - Grafana
-# # - Loki
-# # - Tempo
+kubectl apply -f argocd/apps/lgtm-app.yaml
