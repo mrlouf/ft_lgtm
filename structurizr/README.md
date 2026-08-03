@@ -1,3 +1,4 @@
+
 # Structurizr
 
 This folder contains the source code for the Structurizr project, which is a web application that allows users to create and share software architecture diagrams.
@@ -10,14 +11,27 @@ You will then be able to view the diagrams and explore the architecture from the
 
 ## Screenshots
 
+Click to enlarge
+
 #### System Context Diagram
+
+<img width="900" height="270" alt="SystemContext-dark" src="https://github.com/user-attachments/assets/e7dd98fc-5941-466f-8c6c-f679e4580440" />
 
 #### Container Diagram
 
+<img width="900" height="500" alt="Containers-dark" src="https://github.com/user-attachments/assets/f987cbae-76c2-4a45-b0df-1edc973fe0f1" />
+
 #### Backend Execution Flow Diagram
+
+<img width="900" height="270" alt="BackendComponents-dark" src="https://github.com/user-attachments/assets/a862becf-3cb5-480f-9ae8-860a2ccc85bf" />
 
 #### Kubernetes Diagram
 
+<img width="900" height="480" alt="KubernetesDeployment-dark" src="https://github.com/user-attachments/assets/91d0c1b7-7d2d-40af-8f13-aed749d6d25e" />
+
+The accuracy of the diagrams is may change over the evolution of the project, in particular when it comes to the Kubernetes cluster.
+
+It is currently depicting the v0.2.0 release.
 
 ## The Necessity of Diagrams
 
