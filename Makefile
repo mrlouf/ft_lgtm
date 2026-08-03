@@ -31,6 +31,8 @@ APP_GRAFANA_DEV = http://localhost:3000
 APP_OTEL_DEV = http://localhost:55679/debug/servicez
 
 
+DEPLOYMENT_MODE ?= helm
+
 # ════════════════════════════════════════════════════════════
 
 
@@ -56,13 +58,29 @@ deploy: ## Deploy the system using either Helm or ArgoCD
 	@printf "\n$(YELLOW)Choose between Helm and ArgoCD to deploy the system (h/a)$(NC)\n"
 	@read answer; \
 	if [ "$$answer" == "h" ] ;then \
-		./scripts/deploy-helm.sh $(CLUSTER_NAME); \
+		DEPLOYMENT_MODE=helm; \
 	elif [ "$$answer" == "a" ] ;then \
-		./scripts/deploy-argocd.sh $(CLUSTER_NAME); \
+		DEPLOYMENT_MODE=argocd; \
 	else \
 		echo "Invalid option. Please choose 'h' for Helm or 'a' for ArgoCD."; \
 		exit 1; \
 	fi
+
+deploy-helm: cluster ## Deploy the system using Helm
+	@printf "\n$(YELLOW)Deploying the system using Helm$(NC)\n"
+	@echo ''
+	@./scripts/deploy-helm.sh $(CLUSTER_NAME)
+	@./scripts/append-hosts.sh $(CLUSTER_NAME)
+	@echo ''
+	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
+	@echo -e "$(BLUE)🌐 Access IPFS at $(IPFS_URL)$(NC)"
+	@echo -e "$(BLUE)🌐 Access Grafana at $(GRAFANA_URL)$(NC)"
+	@echo ""
+
+deploy-argocd: cluster ## Deploy the system using ArgoCD
+	@printf "\n$(YELLOW)Deploying the system using ArgoCD$(NC)\n"
+	@echo ''
+	@./scripts/deploy-argocd.sh $(CLUSTER_NAME)
 	@./scripts/append-hosts.sh $(CLUSTER_NAME)
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
