@@ -102,11 +102,8 @@ develop-stop: ## Stop the development environment
 	@docker compose -f dev/docker-compose.yaml down
 
 k9s: ## Install k9s, a TUI tool to manage k8s clusters
-	@printf "\n$(YELLOW)Installing k9s...$(NC)\n"
+	@printf "\n$(YELLOW)Checking k9s installation...$(NC)\n"
 	@echo ''
 	@./scripts/install-k9s.sh
-	@echo -e "$(BLUE) k9s installed:$(NC)"
-	@k9s version
 
-
-PHONY: help all cluster build start deploy stop clean develop develop-stop
+PHONY: help all cluster build start deploy stop clean develop develop-stop k9s
