@@ -26,7 +26,7 @@ frontend:
   service:
     port: 80
   image:
-    repository: lgtm_front
+    repository: ghcr.io/mrlouf/lgtm_front
     tag: latest
     pullPolicy: Always
 
@@ -36,7 +36,7 @@ backend:
   service:
       port: 4242
   image:
-    repository: lgtm_back
+    repository: ghcr.io/mrlouf/lgtm_back
     tag: latest
     pullPolicy: Always
 

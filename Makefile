@@ -42,20 +42,27 @@ help: ## Show this help message
 
 all: cluster deploy ## Setup, build and deploy all services
 
-cluster: ## Install the k3d cluster
+cluster: ## Install the k3d cluster and Helm on the host
 	@printf "\n$(YELLOW)Installing $(CLUSTER_NAME) on the host$(NC)\n"
 	@echo ''
 	@./scripts/setup-cluster.sh $(CLUSTER_NAME)
 
-build: ## Build the docker images and push them to the GHCR registry
+build: ## Build the docker images and push them to the GHCR registry (requires permission)
 	@printf "\n$(YELLOW)Building docker images$(NC)\n"
 	@echo ''
 	@./scripts/build-images.sh $(CLUSTER_NAME)
 
-
-deploy: ## Deploy all services
-	@printf "\n$(YELLOW)Deploying the stack... this may take a moment $(NC)\n\n"
-	@./scripts/deploy-stack.sh $(CLUSTER_NAME)
+deploy: ## Deploy the system using either Helm or ArgoCD
+	@printf "\n$(YELLOW)Choose between Helm and ArgoCD to deploy the system (h/a)$(NC)\n"
+	@read answer; \
+	if [ "$$answer" == "h" ] ;then \
+		./scripts/deploy-helm.sh $(CLUSTER_NAME); \
+	elif [ "$$answer" == "a" ] ;then \
+		./scripts/deploy-argocd.sh $(CLUSTER_NAME); \
+	else \
+		echo "Invalid option. Please choose 'h' for Helm or 'a' for ArgoCD."; \
+		exit 1; \
+	fi
 	@./scripts/append-hosts.sh $(CLUSTER_NAME)
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
