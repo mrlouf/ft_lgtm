@@ -54,15 +54,15 @@ build: ## Build the docker images and push them to the GHCR registry (requires p
 	@echo ''
 	@./scripts/build-images.sh $(CLUSTER_NAME)
 
-deploy: ## Deploy the system using either Helm or ArgoCD
-	@printf "\n$(YELLOW)Choose between Helm and ArgoCD to deploy the system (h/a)$(NC)\n"
-	@read answer; \
-	if [ "$$answer" == "h" ] ;then \
-		DEPLOYMENT_MODE=helm; \
-	elif [ "$$answer" == "a" ] ;then \
-		DEPLOYMENT_MODE=argocd; \
+deploy: ## Deploy the system using the selected deployment method (Helm or ArgoCD)
+	@printf "\n$(YELLOW)Choose deployment method (h/a):$(NC)\n"; \
+	read answer; \
+	if [ "$$answer" = "h" ]; then \
+		$(MAKE) deploy-helm; \
+	elif [ "$$answer" = "a" ]; then \
+		$(MAKE) deploy-argocd; \
 	else \
-		echo "Invalid option. Please choose 'h' for Helm or 'a' for ArgoCD."; \
+		echo "Invalid option"; \
 		exit 1; \
 	fi
 
