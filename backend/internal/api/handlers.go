@@ -84,10 +84,8 @@ func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.Respo
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
+func returnSuccessResponse(logger *slog.Logger, tracer trace.Tracer, span trace.Span, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
-	ctx := context.Background()
-	_, span := tracer.Start(ctx, "backend.returnSuccessResponse")
 	defer span.End()
 
 	resp := Response{
@@ -144,24 +142,22 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
 		defer cancel()
 
-		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
+		ctx, span := b.Tracer.Start(ctx, "backend.request", trace.WithAttributes(
 			attribute.String("language", request.Language),
 		))
-		span.SetAttributes(attribute.String("run.status", "started"))
 
 		var run backend.RunSpecs = backend.RunSpecs{
 			Language: request.Language,
 			Source:   []byte(request.Code),
 			Start:    time.Now(),
-			Ctx:      ctx,
 			Span:     span,
 		}
 
-		stdout, stderr, responseCID, err := b.Run(run)
+		stdout, stderr, responseCID, err := b.Run(ctx, run)
 		if err != nil {
 			returnFailedResponse(b.Logger, b.Tracer, w, stderr, err)
 		} else {
-			returnSuccessResponse(b.Logger, b.Tracer, w, stdout, stderr, responseCID)
+			returnSuccessResponse(b.Logger, b.Tracer, span, w, stdout, stderr, responseCID)
 		}
 	}
 }

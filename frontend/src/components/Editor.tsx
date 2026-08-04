@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
+import { keymap } from "@codemirror/view";
+import { indentWithTab } from "@codemirror/commands";
 
 import LanguageButton from "./LanguageButton";
 
@@ -41,6 +43,7 @@ export default function Editor({
             doc: code,
             extensions: [
                 basicSetup,
+                keymap.of([indentWithTab]),
                 EditorView.lineWrapping,
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {

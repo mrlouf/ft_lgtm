@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 )
 
 type Compiler interface {
-	Compile(ctx context.Context, source []byte, lang string) ([]byte, error)
+	Compile(ctx context.Context, span trace.Span, source []byte, lang string) ([]byte, error)
 }
 
 type Executor interface {
@@ -64,45 +63,50 @@ type RunSpecs struct {
 	Language string
 	Source   []byte
 	Start    time.Time
-	Ctx      context.Context
 	Span     trace.Span
 }
 
-func (b *Backend) Run(r RunSpecs) (string, string, publisher.ResponseCID, error) {
+func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publisher.ResponseCID, error) {
 
-	log.Printf("Run: start for language: %s", r.Language)
-	b.Metrics.RunCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language)))
+	b.Logger.InfoContext(ctx, "run: start", "language", r.Language)
+	b.Metrics.RunCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language)))
+	ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
+		attribute.String("language", r.Language),
+	))
+	defer span.End()
 
-	wasmBinary, err := b.Compiler.Compile(r.Ctx, r.Source, r.Language)
+	wasmBinary, err := b.Compiler.Compile(ctx, span, r.Source, r.Language)
 	if err != nil {
-		r.Span.RecordError(err)
-		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "compile")))
-		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
+		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "compile")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
 		return "", "", publisher.ResponseCID{}, err
 	}
 
-	stdout, stderr, err := b.Executor.Execute(r.Ctx, wasmBinary)
+	stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
 	if err != nil {
-		r.Span.RecordError(err)
-		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "execute")))
-		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
+		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "execute")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
-	responseCID, err := b.Publisher.Publish(r.Ctx, r.Source, []byte(stdout))
+	responseCID, err := b.Publisher.Publish(ctx, r.Source, []byte(stdout))
 	if err != nil {
-
-		b.Metrics.FailureCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "publish")))
-		b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
+		span.RecordError(err)
+		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "publish")))
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
 	status := classifyStatus(err)
 
-	log.Println("Run: completed with status:", status.String())
-
-	b.Metrics.SuccessCounter.Add(r.Ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("status", status.String())))
-	b.Metrics.RunDuration.Record(r.Ctx, time.Since(r.Start).Seconds())
+	b.Logger.InfoContext(ctx, "run: completed", "language", r.Language, "status", status.String())
+	span.AddEvent("run completed", trace.WithAttributes(
+		attribute.String("status", status.String()),
+	))
+	b.Metrics.SuccessCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("status", status.String())))
+	b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
 
 	return stdout, stderr, responseCID, nil
 
