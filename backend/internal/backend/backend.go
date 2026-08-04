@@ -68,12 +68,12 @@ type RunSpecs struct {
 
 func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publisher.ResponseCID, error) {
 
-	b.Logger.InfoContext(ctx, "run: start", "language", r.Language)
-	b.Metrics.RunCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language)))
 	ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
 		attribute.String("language", r.Language),
 	))
 	defer span.End()
+	b.Logger.InfoContext(ctx, "run: start", "language", r.Language)
+	b.Metrics.RunCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language)))
 
 	wasmBinary, err := b.Compiler.Compile(ctx, span, r.Source, r.Language)
 	if err != nil {

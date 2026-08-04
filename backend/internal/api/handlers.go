@@ -144,9 +144,11 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		defer cancel()
 
-		// Root span for the entire request lifecycle
+		// Root span for the entire request lifecycle.
 		// All subsequent spans will be children of this root span,
 		// which MUST be closed at the end of the request.
+		// In the same way, the context is created here with a timeout,
+		// and will be passed down to all subsequent functions.
 		ctx, span := b.Tracer.Start(ctx, "backend.request", trace.WithAttributes(
 			attribute.String("language", request.Language),
 		))
