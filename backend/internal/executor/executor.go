@@ -43,7 +43,7 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 	defer span.End()
 
 	FScfg := wazero.NewFSConfig().
-		WithDirMount("/tmp", "/tmp")
+		WithReadOnlyDirMount("/tmp", "/tmp") // Prevent any write access
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 

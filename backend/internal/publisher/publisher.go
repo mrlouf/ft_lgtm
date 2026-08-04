@@ -54,7 +54,7 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	}
 	response.Source = sourceBlock.Path().String()
 	response.Source = response.Source[6:] // Remove the "/ipfs/" prefix
-	span.AddEvent("blocks published", trace.WithAttributes(
+	span.AddEvent("source block published", trace.WithAttributes(
 		attribute.String("source_cid", response.Source),
 	))
 	i.logger.InfoContext(ctx, "publish: block published", "source", response.Source)
@@ -68,6 +68,9 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 	}
 	response.Stdout = outputBlock.Path().String()
 	response.Stdout = response.Stdout[6:]
+	span.AddEvent("stdout block published", trace.WithAttributes(
+		attribute.String("stdout_cid", response.Stdout),
+	))
 	i.logger.InfoContext(ctx, "publish: block published", "stdout", response.Stdout)
 
 	span.AddEvent("publish: done")
