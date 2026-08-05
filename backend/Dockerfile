@@ -1,4 +1,4 @@
-FROM golang:1.26-bookworm AS builder
+FROM golang:1.26-bookworm
 
 WORKDIR /app
 
@@ -9,21 +9,22 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o lgtm-backend ./cmd/server/main.go
 
+# Install TinyGo
+RUN apt-get update && apt-get install -y wget && \
+    wget https://github.com/tinygo-org/tinygo/releases/download/v0.41.1/tinygo_0.41.1_amd64.deb && \
+    dpkg -i tinygo_0.41.1_amd64.deb && \
+    rm tinygo_0.41.1_amd64.deb
+
+# Install Javy
 RUN wget https://github.com/bytecodealliance/javy/releases/download/v9.0.0/javy-x86_64-linux-v9.0.0.gz && \
     gunzip javy-x86_64-linux-v9.0.0.gz && \
     chmod +x javy-x86_64-linux-v9.0.0 && \
     mv javy-x86_64-linux-v9.0.0 /usr/local/bin/javy
 
-# TinyGo for now since we only need to compile Go
-# but this may change in the future if we want to support other languages like Python, JavaScript, etc.
-FROM tinygo/tinygo:0.41.1
-
-WORKDIR /root/
+# Install Emcc
+RUN apt-get update && apt-get install -y emscripten
 
 ENV ENV=production
-
-COPY --from=builder /app/lgtm-backend .
-COPY --from=builder /usr/local/bin/javy /usr/local/bin/javy
 
 EXPOSE 4242
 

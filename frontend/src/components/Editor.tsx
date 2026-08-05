@@ -9,7 +9,7 @@ import LanguageButton from "./LanguageButton";
 
 import EnterCIDButton from "./EnterCIDButton";
 
-type Language = "javascript" | "python" | "go";
+type Language = "javascript" | "python" | "go" | "c" | "cpp";
 
 
 type EditorProps = {

@@ -1,4 +1,4 @@
-type Language = "javascript" | "python" | "go";
+type Language = "javascript" | "python" | "go" | "c" | "cpp";
 type Status = "Ready" | "Running" | "Completed" | "Error";
 
 type RunButtonProps = {

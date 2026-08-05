@@ -141,6 +141,56 @@ func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
 	return os.ReadFile(outPath)
 }
 
+func compileCToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.c")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "emcc", srcPath, "-o", outPath, "-s", "WASM=1", "-s", "EXPORTED_FUNCTIONS=['_main']")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	return os.ReadFile(outPath)
+}
+
+func compileCPPToWasm(ctx context.Context, source []byte) ([]byte, error) {
+
+	tmpDir, err := os.MkdirTemp("", "snippet-*")
+	if err != nil {
+		return nil, fmt.Errorf("compile: tmpdir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	srcPath := filepath.Join(tmpDir, "main.cpp")
+	if err := os.WriteFile(srcPath, source, 0o644); err != nil {
+		return nil, fmt.Errorf("compile: write source: %w", err)
+	}
+
+	outPath := filepath.Join(tmpDir, "out.wasm")
+	cmd := exec.CommandContext(ctx, "em++", srcPath, "-o", outPath, "-s", "WASM=1", "-s", "EXPORTED_FUNCTIONS=['_main']")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("compile: %s: %w", stderr.String(), err)
+	}
+
+	return os.ReadFile(outPath)
+}
+
 func (s *WazeroSandbox) Compile(ctx context.Context, span trace.Span, source []byte, lang string) ([]byte, error) {
 
 	s.logger.InfoContext(ctx, "compile: start", "language", lang, "source_length", len(source))
@@ -159,7 +209,11 @@ func (s *WazeroSandbox) Compile(ctx context.Context, span trace.Span, source []b
 	case "javascript", "js":
 		wasmBinary, err = compileJSToWasm(ctx, source)
 	case "python", "py":
-		wasmBinary, err = compilePythonToWasm(ctx, source)
+		err = fmt.Errorf("compile: python to wasm compilation is not supported yet")
+	case "c", "C":
+		wasmBinary, err = compileCToWasm(ctx, source)
+	case "cpp", "c++":
+		wasmBinary, err = compileCPPToWasm(ctx, source) // Using the same C compiler for C++
 	default:
 		s.logger.ErrorContext(ctx, "compile: unsupported language", "language", lang)
 		span.RecordError(fmt.Errorf("unsupported language: %s", lang))
