@@ -7,6 +7,7 @@ import (
 
 	"lgtm/internal/publisher"
 	"lgtm/internal/telemetry"
+	"lgtm/internal/test"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -110,4 +111,35 @@ func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publishe
 
 	return stdout, stderr, responseCID, nil
 
+}
+
+func (b *Backend) RuntimeTests(ctx context.Context, r RunSpecs) (string, string, error) {
+
+	ctx, span := b.Tracer.Start(ctx, "backend.runtime_tests")
+	defer span.End()
+	b.Logger.InfoContext(ctx, "runtime tests: start")
+
+	testsSource := test.ReturnTestsSources()
+
+	for testName, source := range testsSource {
+		b.Logger.InfoContext(ctx, "running test", "test_name", testName)
+		wasmBinary, err := b.Compiler.Compile(ctx, span, []byte(source), "go")
+		if err != nil {
+			span.RecordError(err)
+			b.Logger.ErrorContext(ctx, "test failed during compilation", "test_name", testName, "error", err)
+			return "", "", err
+		}
+
+		stdout, stderr, err := b.Executor.Execute(ctx, wasmBinary)
+		if err != nil {
+			span.RecordError(err)
+			b.Logger.ErrorContext(ctx, "test failed during execution", "test_name", testName, "error", err)
+			return stdout, stderr, err
+		}
+
+		b.Logger.InfoContext(ctx, "test completed successfully", "test_name", testName)
+	}
+
+	b.Logger.InfoContext(ctx, "runtime tests: completed")
+	return "", "", nil
 }

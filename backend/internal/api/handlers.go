@@ -24,8 +24,8 @@ type Request struct {
 }
 
 type Response struct {
-	SourceCID string `json:"source_cid"`
-	OutputCID string `json:"output_cid"`
+	SourceCID string `json:"source_cid,omitempty"`
+	OutputCID string `json:"output_cid,omitempty"`
 	Status    string `json:"status"`
 	Stdout    string `json:"stdout,omitempty"`
 	Stderr    string `json:"stderr,omitempty"`
@@ -40,8 +40,6 @@ type Metrics struct {
 
 func getHTTPStatusFromError(err error) int {
 
-	log.Printf("Classifying error: %v", err)
-
 	stage, _, _ := strings.Cut(err.Error(), ": ")
 
 	switch stage {
@@ -55,6 +53,8 @@ func getHTTPStatusFromError(err error) int {
 		return http.StatusBadRequest
 	case "timeout":
 		return http.StatusRequestTimeout
+	case "instantiate":
+		return http.StatusBadRequest
 	case "publish":
 		return http.StatusInternalServerError
 	default:
@@ -113,6 +113,53 @@ func returnSuccessResponse(logger *slog.Logger, span trace.Span, w http.Response
 	json.NewEncoder(w).Encode(resp)
 }
 
+func returnTestsFailedResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, stderr string, err error) {
+
+	defer span.End()
+
+	logger.Error("Runtime tests failed", slog.Any("error", err))
+
+	httpStatus := getHTTPStatusFromError(err)
+	w.WriteHeader(httpStatus)
+
+	resp := Response{
+		Status: "failed",
+		Stderr: stderr,
+		Error:  err.Error(),
+	}
+
+	span.AddEvent("Runtime tests failed", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
+		attribute.String("stderr", stderr),
+		attribute.String("error", err.Error()),
+	))
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+func returnTestsSuccessResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, stdout, stderr string) {
+
+	defer span.End()
+
+	resp := Response{
+		Status: "completed",
+		Stdout: stdout,
+		Stderr: stderr,
+	}
+
+	httpStatus := http.StatusOK
+	w.WriteHeader(httpStatus)
+	logger.Info("Returning successful runtime tests response", slog.String("http_status", http.StatusText(httpStatus)))
+
+	span.AddEvent("Runtime tests succeeded", trace.WithAttributes(
+		attribute.String("http_status", http.StatusText(httpStatus)),
+		attribute.String("stdout", stdout),
+		attribute.String("stderr", stderr),
+	))
+
+	json.NewEncoder(w).Encode(resp)
+}
+
 func PrometheusMetricsHandler() http.HandlerFunc {
 
 	reg := prometheus.NewRegistry()
@@ -165,6 +212,36 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 			returnFailedResponse(b.Logger, span, w, stderr, err)
 		} else {
 			returnSuccessResponse(b.Logger, span, w, stdout, stderr, responseCID)
+		}
+	}
+}
+
+func RuntimeTestsHandler(b *backend.Backend) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var request Request
+
+		b.Logger.Info("Received HTTP request at /api/tests", slog.String("language", request.Language), slog.Int("code_length", len(request.Code)))
+
+		w.Header().Set("Content-Type", "application/json")
+
+		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
+
+		ctx, span := b.Tracer.Start(ctx, "backend.request")
+
+		var run backend.RunSpecs = backend.RunSpecs{
+			Start: time.Now(),
+			Span:  span,
+		}
+
+		stdout, stderr, err := b.RuntimeTests(ctx, run)
+		if err != nil {
+			returnTestsFailedResponse(b.Logger, span, w, stderr, err)
+		} else {
+			returnTestsSuccessResponse(b.Logger, span, w, stdout, stderr)
 		}
 	}
 }
