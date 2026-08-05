@@ -1,6 +1,13 @@
 scrape_configs:
 - job_name: 'lgtm-otel-collector'
   scrape_interval: 10s
+
   static_configs:
   - targets:
     - otel-collector:8889
+  scrape_protocols:
+    - OpenMetricsText1.0.0
+
+storage:
+  exemplars:
+    max_exemplars: 100000
