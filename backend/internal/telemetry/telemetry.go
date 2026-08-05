@@ -22,8 +22,6 @@ import (
 
 type ApplicationMetrics struct {
 	RunCounter     metric.Int64Counter
-	GoRunsCounter  metric.Int64Counter
-	JSRunsCounter  metric.Int64Counter
 	SuccessCounter metric.Int64Counter
 	FailureCounter metric.Int64Counter
 	RunDuration    metric.Float64Histogram
@@ -37,16 +35,6 @@ func NewApplicationMetrics(meter metric.Meter) *ApplicationMetrics {
 	runCounter, err := meter.Int64Counter("run_total")
 	if err != nil {
 		panic(fmt.Sprintf("failed to create run counter: %v", err))
-	}
-
-	goRunsCounter, err := meter.Int64Counter("run_go_total")
-	if err != nil {
-		panic(fmt.Sprintf("failed to create Go run counter: %v", err))
-	}
-
-	jsRunsCounter, err := meter.Int64Counter("run_js_total")
-	if err != nil {
-		panic(fmt.Sprintf("failed to create JS run counter: %v", err))
 	}
 
 	successCounter, err := meter.Int64Counter("run_success_total")
@@ -66,8 +54,6 @@ func NewApplicationMetrics(meter metric.Meter) *ApplicationMetrics {
 
 	return &ApplicationMetrics{
 		RunCounter:     runCounter,
-		GoRunsCounter:  goRunsCounter,
-		JSRunsCounter:  jsRunsCounter,
 		SuccessCounter: successCounter,
 		FailureCounter: failureCounter,
 		RunDuration:    runDuration,
