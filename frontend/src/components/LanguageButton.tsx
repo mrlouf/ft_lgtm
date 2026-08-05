@@ -1,4 +1,4 @@
-type Language = "javascript" | "python" | "go";
+type Language = "javascript" | "python" | "go" | "c";
 
 type LanguageButtonProps = {
     language: Language;
@@ -9,6 +9,7 @@ const labels: Record<Language, string> = {
     javascript: "JavaScript",
     python: "Python",
     go: "Go",
+    c: "C",
 };
 
 export default function LanguageButton({
@@ -25,6 +26,7 @@ export default function LanguageButton({
             <option value="javascript">{labels.javascript}</option>
             <option value="python">{labels.python}</option>
             <option value="go">{labels.go}</option>
+            <option value="c">{labels.c}</option>
         </select>
     );
 }
