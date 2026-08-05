@@ -7,6 +7,12 @@ datasources:
     url: http://prometheus:9090
     uid: prometheus
     isDefault: true
+    jsonData:
+    httpMethod: POST
+    exemplarTraceIdDestinations:
+      - name: trace_id
+        datasourceUid: tempo
+        urlDisplayLabel: "See traces in Tempo"
 
   - name: Tempo
     type: tempo
