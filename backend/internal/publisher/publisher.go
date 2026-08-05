@@ -52,6 +52,12 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 		i.logger.ErrorContext(ctx, "publish: error adding source block", "error", err)
 		return response, fmt.Errorf("ipfs add source: %w", err)
 	}
+	response.Source = sourceBlock.Path().String()
+	response.Source = response.Source[6:] // Remove the "/ipfs/" prefix
+	span.AddEvent("source block published", trace.WithAttributes(
+		attribute.String("source_cid", response.Source),
+	))
+	i.logger.InfoContext(ctx, "publish: block published", "source", response.Source)
 
 	outputReader := bytes.NewReader(stdout)
 	outputBlock, err := i.node.Block().Put(ctx, outputReader)
@@ -60,19 +66,14 @@ func (i *IPFSPublisher) Publish(ctx context.Context, source []byte, stdout []byt
 		i.logger.ErrorContext(ctx, "publish: error adding stdout block", "error", err)
 		return response, fmt.Errorf("ipfs add stdout: %w", err)
 	}
-
-	response.Source = sourceBlock.Path().String()
 	response.Stdout = outputBlock.Path().String()
-
-	response.Source = response.Source[6:] // Remove the "/ipfs/" prefix
 	response.Stdout = response.Stdout[6:]
-
-	span.AddEvent("blocks published", trace.WithAttributes(
-		attribute.String("source_cid", response.Source),
+	span.AddEvent("stdout block published", trace.WithAttributes(
 		attribute.String("stdout_cid", response.Stdout),
 	))
+	i.logger.InfoContext(ctx, "publish: block published", "stdout", response.Stdout)
 
-	i.logger.InfoContext(ctx, "publish: block published", "source", response.Source, "stdout", response.Stdout)
+	span.AddEvent("publish: done")
 	i.logger.InfoContext(ctx, "publish: done")
 
 	return response, nil

@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/sdk/metric/exemplar"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
@@ -79,8 +80,19 @@ func InitMetrics(ctx context.Context, collectorEndpoint string) (metric.Meter, f
 		return nil, nil, err
 	}
 
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName("lgtm:backend"),
+		),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exporter)),
+		sdkmetric.WithResource(res),
+		sdkmetric.WithExemplarFilter(exemplar.AlwaysOnFilter),
 	)
 
 	meter := mp.Meter("lgtm/backend")

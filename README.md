@@ -132,6 +132,8 @@ The `make all` command will successively create the Kubernetes cluster, install 
 
 [Wazero Documentation](https://pkg.go.dev/github.com/tetratelabs/wazero@v1.12.0)
 
+[Wazero Deep Wiki on Go API](https://deepwiki.com/wazero/wazero/2.2-go-api)
+
 [IPFS Documentation](https://docs.ipfs.tech/)
 
 [IPFS Retrieval Check](https://check.ipfs.network/)
