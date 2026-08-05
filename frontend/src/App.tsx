@@ -8,7 +8,7 @@ import StatusBar from "./components/StatusBar";
 
 import getSnippet from "./snippets/Snippets";
 
-type Language = "javascript" | "python" | "go";
+type Language = "javascript" | "python" | "go" | "c" | "cpp";
 type Status = "Ready" | "Running" | "Completed" | "Error";
 
 export default function App() {

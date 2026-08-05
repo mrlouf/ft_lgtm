@@ -22,7 +22,8 @@ RUN wget https://github.com/bytecodealliance/javy/releases/download/v9.0.0/javy-
     chmod +x javy-x86_64-linux-v9.0.0 && \
     mv javy-x86_64-linux-v9.0.0 /usr/local/bin/javy
 
-# Install Pyodide
+# Install Emcc
+RUN apt-get update && apt-get install -y emscripten
 
 RUN apt-get remove -y wget && apt-get autoremove -y && apt-get clean
 
