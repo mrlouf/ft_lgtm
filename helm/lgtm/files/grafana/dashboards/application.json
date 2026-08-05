@@ -4,18 +4,18 @@
   "metadata": {
     "name": "adpdwqz",
     "namespace": "default",
-    "uid": "453cf863-fe80-4134-9342-0708c071e1c8",
-    "resourceVersion": "1785498886408983",
-    "generation": 27,
-    "creationTimestamp": "2026-07-31T10:17:18Z",
+    "uid": "0160a73b-e4cc-4e1f-a79d-a79b2dbc3ca0",
+    "resourceVersion": "1785855924465993",
+    "generation": 2,
+    "creationTimestamp": "2026-08-04T14:07:52Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "2471876393746432"
+      "grafana.app/deprecatedInternalID": "3979450970955776"
     },
     "annotations": {
-      "grafana.app/createdBy": "user:dftrc6xei6sjkd",
+      "grafana.app/createdBy": "user:dfu3170ljgagwa",
       "grafana.app/saved-from-ui": "Grafana v13.2.0-30317724307 (5b313658a7)",
-      "grafana.app/updatedBy": "user:dftrc6xei6sjkd",
-      "grafana.app/updatedTimestamp": "2026-07-31T11:54:46Z"
+      "grafana.app/updatedBy": "user:dfu3170ljgagwa",
+      "grafana.app/updatedTimestamp": "2026-08-04T15:05:24Z"
     }
   },
   "spec": {
@@ -174,7 +174,7 @@
         "spec": {
           "id": 3,
           "title": "Run activity",
-          "description": "Overview of the run activity, showing the average number of runs for each minute",
+          "description": "Overview of the run activity, showing the average number of runs per minute",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -842,7 +842,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Application Metrics",
+    "title": "Application Metrics v2",
     "variables": [],
     "preferences": {
       "layout": {

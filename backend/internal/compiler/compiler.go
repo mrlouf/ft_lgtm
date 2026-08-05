@@ -141,10 +141,13 @@ func compilePythonToWasm(ctx context.Context, source []byte) ([]byte, error) {
 	return os.ReadFile(outPath)
 }
 
-func (s *WazeroSandbox) Compile(ctx context.Context, source []byte, lang string) ([]byte, error) {
+func (s *WazeroSandbox) Compile(ctx context.Context, span trace.Span, source []byte, lang string) ([]byte, error) {
 
 	s.logger.InfoContext(ctx, "compile: start", "language", lang, "source_length", len(source))
-	ctx, span := s.tracer.Start(ctx, "compiler.compile")
+	ctx, span = s.tracer.Start(ctx, "compiler.compile", trace.WithAttributes(
+		attribute.String("language", lang),
+		attribute.Int("source_length", len(source)),
+	))
 	defer span.End()
 
 	var wasmBinary []byte

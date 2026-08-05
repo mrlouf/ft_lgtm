@@ -20,7 +20,13 @@ type WazeroExecutor struct {
 }
 
 func NewWazeroExecutor(ctx context.Context, t trace.Tracer, l *slog.Logger) *WazeroExecutor {
-	r := wazero.NewRuntime(ctx)
+
+	cfg := wazero.NewRuntimeConfig().
+		WithMemoryLimitPages(1024).  // 64 MiB
+		WithCloseOnContextDone(true) // Allow termination on context cancellation or timeout
+
+	r := wazero.NewRuntimeWithConfig(ctx, cfg)
+
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
 	return &WazeroExecutor{
@@ -36,11 +42,15 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 	ctx, span := e.tracer.Start(ctx, "executor.execute")
 	defer span.End()
 
+	FScfg := wazero.NewFSConfig().
+		WithReadOnlyDirMount("/tmp", "/tmp") // Prevent any write access
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 
-	config := wazero.NewModuleConfig().
+	modCfg := wazero.NewModuleConfig().
 		WithStdout(&stdoutBuf).
-		WithStderr(&stderrBuf)
+		WithStderr(&stderrBuf).
+		WithFSConfig(FScfg)
 
 	// Compile the WebAssembly module from the raw bytes
 	compiled, err := e.runtime.CompileModule(ctx, wasmBytes)
@@ -56,7 +66,7 @@ func (e *WazeroExecutor) Execute(ctx context.Context, wasmBytes []byte) (stdout,
 
 	// Instantiate the module with the configuration
 	// aka run the WebAssembly module
-	mod, err := e.runtime.InstantiateModule(ctx, compiled, config)
+	mod, err := e.runtime.InstantiateModule(ctx, compiled, modCfg)
 	if mod != nil {
 		defer mod.Close(ctx)
 	}

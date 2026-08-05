@@ -46,7 +46,11 @@ func getHTTPStatusFromError(err error) int {
 
 	switch stage {
 	case "compile":
-		return http.StatusBadRequest
+		if strings.Contains(err.Error(), "signal: killed") {
+			return 499 // Client Closed Request (non-standard)
+		} else {
+			return http.StatusBadRequest
+		}
 	case "execute":
 		return http.StatusBadRequest
 	case "timeout":
@@ -58,15 +62,14 @@ func getHTTPStatusFromError(err error) int {
 	}
 }
 
-func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stderr string, err error) {
+func returnFailedResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, stderr string, err error) {
 
-	ctx := context.Background()
-	_, span := tracer.Start(ctx, "backend.returnFailedResponse")
 	defer span.End()
 
 	logger.Error("Run failed", slog.Any("error", err))
 
-	w.WriteHeader(getHTTPStatusFromError(err))
+	httpStatus := getHTTPStatusFromError(err)
+	w.WriteHeader(httpStatus)
 
 	resp := Response{
 		Status: "failed",
@@ -74,7 +77,6 @@ func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.Respo
 		Error:  err.Error(),
 	}
 
-	httpStatus := getHTTPStatusFromError(err)
 	span.AddEvent("Run failed", trace.WithAttributes(
 		attribute.String("http_status", http.StatusText(httpStatus)),
 		attribute.String("stderr", stderr),
@@ -84,10 +86,8 @@ func returnFailedResponse(logger *slog.Logger, tracer trace.Tracer, w http.Respo
 	json.NewEncoder(w).Encode(resp)
 }
 
-func returnSuccessResponse(logger *slog.Logger, tracer trace.Tracer, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
+func returnSuccessResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, stdout, stderr string, cid publisher.ResponseCID) {
 
-	ctx := context.Background()
-	_, span := tracer.Start(ctx, "backend.returnSuccessResponse")
 	defer span.End()
 
 	resp := Response{
@@ -141,27 +141,30 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		ctx := r.Context()
-		ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		defer cancel()
 
-		ctx, span := b.Tracer.Start(ctx, "backend.run", trace.WithAttributes(
+		// Root span for the entire request lifecycle.
+		// All subsequent spans will be children of this root span,
+		// which MUST be closed at the end of the request.
+		// In the same way, the context is created here with a timeout,
+		// and will be passed down to all subsequent functions.
+		ctx, span := b.Tracer.Start(ctx, "backend.request", trace.WithAttributes(
 			attribute.String("language", request.Language),
 		))
-		span.SetAttributes(attribute.String("run.status", "started"))
 
 		var run backend.RunSpecs = backend.RunSpecs{
 			Language: request.Language,
 			Source:   []byte(request.Code),
 			Start:    time.Now(),
-			Ctx:      ctx,
 			Span:     span,
 		}
 
-		stdout, stderr, responseCID, err := b.Run(run)
+		stdout, stderr, responseCID, err := b.Run(ctx, run)
 		if err != nil {
-			returnFailedResponse(b.Logger, b.Tracer, w, stderr, err)
+			returnFailedResponse(b.Logger, span, w, stderr, err)
 		} else {
-			returnSuccessResponse(b.Logger, b.Tracer, w, stdout, stderr, responseCID)
+			returnSuccessResponse(b.Logger, span, w, stdout, stderr, responseCID)
 		}
 	}
 }
