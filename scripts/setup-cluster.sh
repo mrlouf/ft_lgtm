@@ -91,8 +91,6 @@ fi
 # Set the kubeconfig context
 export KUBECONFIG=$(k3d kubeconfig write $CLUSTER_NAME)
 
-echo "export KUBECONFIG=$KUBECONFIG" >> ~/.bashrc 
-
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #                   Install Helm                   #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
