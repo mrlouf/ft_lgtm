@@ -11,6 +11,9 @@ CLUSTER_NAME=$1
 
 set -e
 
+# Set the kubeconfig context
+export KUBECONFIG=$(k3d kubeconfig write $CLUSTER_NAME)
+
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #               Install ArgoCD via Helm            #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
