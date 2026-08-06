@@ -107,7 +107,7 @@ func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publishe
 		attribute.String("status", status.String()),
 	))
 	b.Metrics.SuccessCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("status", status.String())))
-	b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
+	b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds(), metric.WithAttributes(attribute.String("status", status.String())))
 
 	return stdout, stderr, responseCID, nil
 
