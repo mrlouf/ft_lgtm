@@ -80,7 +80,7 @@ func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publishe
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "compile")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds(), metric.WithAttributes(attribute.String("status", "failed")))
 		return "", "", publisher.ResponseCID{}, err
 	}
 
@@ -88,7 +88,7 @@ func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publishe
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "execute")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds(), metric.WithAttributes(attribute.String("status", "failed")))
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
@@ -96,7 +96,7 @@ func (b *Backend) Run(ctx context.Context, r RunSpecs) (string, string, publishe
 	if err != nil {
 		span.RecordError(err)
 		b.Metrics.FailureCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("language", r.Language), attribute.String("error_type", "publish")))
-		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds())
+		b.Metrics.RunDuration.Record(ctx, time.Since(r.Start).Seconds(), metric.WithAttributes(attribute.String("status", "failed")))
 		return stdout, stderr, publisher.ResponseCID{}, err
 	}
 
