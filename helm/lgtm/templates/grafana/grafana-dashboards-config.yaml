@@ -8,6 +8,6 @@ metadata:
 data:
   application.json: |
 {{ .Files.Get "files/grafana/dashboards/application.json" | indent 4 }}
-  backend.json: |
-{{ .Files.Get "files/grafana/dashboards/backend.json" | indent 4 }}
+  traces.json: |
+{{ .Files.Get "files/grafana/dashboards/traces.json" | indent 4 }}
   
