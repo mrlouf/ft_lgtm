@@ -70,7 +70,7 @@ deploy-helm: cluster ## Deploy the system using Helm
 	@printf "\n$(YELLOW)Deploying the system using Helm$(NC)\n"
 	@echo ''
 	@./scripts/deploy-helm.sh $(CLUSTER_NAME)
-	@./scripts/append-hosts.sh $(CLUSTER_NAME)
+	@./scripts/append-hosts.sh
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
 	@echo -e "$(BLUE)🌐 Access IPFS at $(IPFS_URL)$(NC)"
@@ -81,7 +81,7 @@ deploy-argocd: cluster ## Deploy the system using ArgoCD
 	@printf "\n$(YELLOW)Deploying the system using ArgoCD$(NC)\n"
 	@echo ''
 	@./scripts/deploy-argocd.sh $(CLUSTER_NAME)
-	@./scripts/append-hosts.sh $(CLUSTER_NAME)
+	@./scripts/append-hosts.sh TRUE
 	@echo ''
 	@echo -e "$(BLUE)🌐 Access the application at $(APP_URL)$(NC)"
 	@echo -e "$(BLUE)🌐 Access IPFS at $(IPFS_URL)$(NC)"

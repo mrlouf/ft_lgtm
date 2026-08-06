@@ -7,11 +7,15 @@ BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Colour
 
-CLUSTER_NAME=$1
+ADD_ARGOCD=$1
 
 set -e
 
-HOSTS='172.18.0.2	lgtm.local argocd.lgtm.local ipfs.lgtm.local'
+if [[ $ADD_ARGOCD == "TRUE" ]]; then
+    HOSTS='172.18.0.2	lgtm.local argocd.lgtm.local ipfs.lgtm.local grafana.lgtm.local'
+else
+    HOSTS='172.18.0.2	lgtm.local ipfs.lgtm.local grafana.lgtm.local'
+fi
 
 if [[ $(grep -c "$HOSTS" /etc/hosts) -gt 0 ]]; then
     echo -e "${YELLOW}Hosts already exist in /etc/hosts${NC}"
