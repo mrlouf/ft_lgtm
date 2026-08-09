@@ -30,6 +30,4 @@ else
     --create-namespace \
     --values ./helm/lgtm/values.yaml 1>/dev/null
 
-    kubectl wait --namespace lgtm --for=condition=available deployment/lgtm --timeout=120s
-
 fi

@@ -62,11 +62,11 @@ func getHTTPStatusFromError(err error) int {
 	}
 }
 
-func returnFailedResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, stderr string, err error) {
+func returnFailedResponse(logger *slog.Logger, span trace.Span, w http.ResponseWriter, source string, stderr string, err error) {
 
 	defer span.End()
 
-	logger.Error("Run failed", slog.Any("error", err))
+	logger.Error("Run failed", slog.Any("error", err), slog.String("stderr", stderr), slog.String("source", source))
 
 	httpStatus := getHTTPStatusFromError(err)
 	w.WriteHeader(httpStatus)
@@ -117,7 +117,7 @@ func returnTestsFailedResponse(logger *slog.Logger, span trace.Span, w http.Resp
 
 	defer span.End()
 
-	logger.Error("Runtime tests failed", slog.Any("error", err))
+	logger.Error("Runtime tests failed", slog.Any("error", err), slog.String("stderr", stderr))
 
 	httpStatus := getHTTPStatusFromError(err)
 	w.WriteHeader(httpStatus)
@@ -209,7 +209,8 @@ func RunHandler(b *backend.Backend) http.HandlerFunc {
 
 		stdout, stderr, responseCID, err := b.Run(ctx, run)
 		if err != nil {
-			returnFailedResponse(b.Logger, span, w, stderr, err)
+
+			returnFailedResponse(b.Logger, span, w, request.Code, stderr, err)
 		} else {
 			returnSuccessResponse(b.Logger, span, w, stdout, stderr, responseCID)
 		}
